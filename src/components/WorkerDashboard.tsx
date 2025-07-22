@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { 
+  User, MapPin, Award, ToggleRight, ToggleLeft, Phone, Calendar, 
+  Star, Upload, FileText, CreditCard, LogOut 
   MapPin, 
   Phone, 
   Star, 
@@ -77,6 +79,11 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
     setShowLocationSelector(false);
   };
 
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
   const filteredJobs = mockJobs.filter(job => {
     const matchesJobType = worker.jobTypes.includes(job.jobType);
     
@@ -93,6 +100,61 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white p-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+              {worker.photo ? (
+                <img src={worker.photo} alt="Profile" className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <User className="w-8 h-8" />
+              )}
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold">{worker.name}</h1>
+              <p className="opacity-90">{worker.phoneNumber}</p>
+              <div className="flex items-center space-x-2 mt-1">
+                <MapPin className="w-4 h-4" />
+                <span>{worker.pinCode}</span>
+                
+                {worker.verificationStatus === 'verified' && (
+                  <div className="bg-green-500 px-2 py-1 rounded-full text-xs flex items-center">
+                    <Award className="w-3 h-3 mr-1" />
+                    {t('verified')}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex items-center space-x-4">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-sm font-medium">Logout</span>
+                <button
+                  onClick={toggleAvailability}
+                  className="flex items-center"
+                >
+                  {worker.isAvailableToday ? (
+                    <ToggleRight className="w-8 h-8 text-green-300" />
+                  ) : (
+                    <ToggleLeft className="w-8 h-8 text-gray-300" />
+                  )}
+                </button>
+              </div>
+              <span className="text-xs">
+                {worker.isAvailableToday ? t('available') : t('busy')}
+              </span>
+            </div>
+            
+            <button
+              onClick={handleLogout}
+              className="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-white/10 transition-colors"
+            >
+              <LogOut className="w-6 h-6" />
+              <span className="text-xs">लॉगआउट</span>
+            </button>
+          </div>
+
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
             {worker.photo ? (
@@ -377,4 +439,10 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
       </div>
     </div>
   );
+}
+
+
+
+
+
 }
