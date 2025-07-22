@@ -1,7 +1,21 @@
 import React, { useState } from 'react';
 import { 
+<<<<<<< HEAD
   User, MapPin, Award, ToggleRight, ToggleLeft, Phone, Calendar, 
   Star, Upload, FileText, CreditCard, LogOut 
+=======
+  MapPin, 
+  Phone, 
+  Star, 
+  Calendar, 
+  DollarSign, 
+  User, 
+  Camera,
+  Upload,
+  Award,
+  ToggleLeft,
+  ToggleRight
+>>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
 } from 'lucide-react';
 import { Worker, Job } from '../types/worker';
 import LocationSelector from './LocationSelector';
@@ -68,11 +82,14 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
     setShowLocationSelector(false);
   };
 
+<<<<<<< HEAD
   const handleLogout = () => {
     localStorage.clear();
     window.location.reload();
   };
 
+=======
+>>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
   const filteredJobs = mockJobs.filter(job => {
     const matchesJobType = worker.jobTypes.includes(job.jobType);
     
@@ -89,6 +106,7 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white p-6">
+<<<<<<< HEAD
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
@@ -144,6 +162,43 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
             </button>
           </div>
 
+=======
+        <div className="flex items-center space-x-4">
+          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+            {worker.photo ? (
+              <img src={worker.photo} alt="Profile" className="w-full h-full rounded-full object-cover" />
+            ) : (
+              <User className="w-8 h-8" />
+            )}
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold">{worker.name}</h1>
+            <p className="opacity-90">{worker.phoneNumber}</p>
+            <div className="flex items-center space-x-2 mt-1">
+              <MapPin className="w-4 h-4" />
+              <span>{worker.pinCode}</span>
+              {worker.verificationStatus === 'verified' && (
+                <div className="bg-green-500 px-2 py-1 rounded-full text-xs flex items-center">
+                  <Award className="w-3 h-3 mr-1" />
+                  {t('verified')}
+                </div>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={toggleAvailability}
+            className="flex flex-col items-center space-y-1"
+          >
+            {worker.isAvailableToday ? (
+              <ToggleRight className="w-8 h-8 text-green-300" />
+            ) : (
+              <ToggleLeft className="w-8 h-8 text-gray-300" />
+            )}
+            <span className="text-xs">
+              {worker.isAvailableToday ? t('available') : t('busy')}
+            </span>
+          </button>
+>>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
         </div>
       </div>
 
@@ -393,9 +448,13 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
       </div>
     </div>
   );
+<<<<<<< HEAD
 }
 
 
 
 
 
+=======
+}
+>>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
