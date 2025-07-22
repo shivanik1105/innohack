@@ -1,6 +1,0 @@
-pytesseract
-opencv-python
-Pillow
-numpy
-pytest
-streamlit
