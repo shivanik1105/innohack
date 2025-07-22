@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Phone Auth Test</title>
+</head>
+<body>
+  <h2>Phone Auth Test</h2>
+
+  <input type="text" id="phoneNumber" placeholder="+911234567890" />
+  <button onclick="sendOTP()">Send OTP</button>
+
+  <input type="text" id="otp" placeholder="123456" />
+  <button onclick="verifyOTP()">Verify OTP</button>
+
+  <div id="recaptcha-container"></div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+
+  <script>
+    // Your Firebase config
+    const firebaseConfig = {
+  apiKey: "AIzaSyCwtCMESqYZc8aqJWDqRu5DR6nX87yCSw4",
+  authDomain: "worker-2261e.firebaseapp.com",
+  projectId: "worker-2261e",
+  storageBucket: "worker-2261e.firebasestorage.app",
+  messagingSenderId: "1056182642371",
+  appId: "1:1056182642371:web:fc2bc84b55dba8f390a476",
+  measurementId: "G-KSEDCG3PLD"
+};
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    // Set up invisible reCAPTCHA
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'invisible',
+      callback: function (response) {
+        console.log("reCAPTCHA resolved");
+      }
+    });
+
+    function sendOTP() {
+      const phoneNumber = document.getElementById("phoneNumber").value;
+      const appVerifier = window.recaptchaVerifier;
+
+      firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
+        .then(function (confirmationResult) {
+          window.confirmationResult = confirmationResult;
+          alert("OTP sent successfully!");
+        }).catch(function (error) {
+          console.error("Error during sending OTP:", error);
+          alert("Failed to send OTP: " + error.message);
+        });
+    }
+
+    function verifyOTP() {
+      const code = document.getElementById("otp").value;
+      window.confirmationResult.confirm(code)
+        .then(function (result) {
+          const user = result.user;
+          alert("OTP verified! User logged in.");
+          console.log("User info:", user);
+        }).catch(function (error) {
+          alert("Invalid OTP: " + error.message);
+        });
+    }
+  </script>
+</body>
+</html>
