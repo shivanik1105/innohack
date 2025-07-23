@@ -1,30 +1,41 @@
-import React, { useState } from 'react';
-import { 
-<<<<<<< HEAD
-  User, MapPin, Award, ToggleRight, ToggleLeft, Phone, Calendar, 
-  Star, Upload, FileText, CreditCard, LogOut 
-=======
-  MapPin, 
-  Phone, 
-  Star, 
-  Calendar, 
-  DollarSign, 
-  User, 
-  Camera,
-  Upload,
-  Award,
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
+import {
+  MapPin,
+  Phone,
+  Calendar,
+  User,
   ToggleLeft,
-  ToggleRight
->>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
+  ToggleRight,
+  Home,
+  Wallet,
+  Briefcase,
+  Bell,
+  Settings,
+  LogOut
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Worker, Job } from '../types/worker';
 import LocationSelector from './LocationSelector';
 import { useLanguage } from '../hooks/useLanguage';
+import { TranslationKey } from '/Users/janhvi/innohack1/innohack/src/utils/translations.ts';
+import { Search } from 'lucide-react';
+import { X } from 'lucide-react';
+import { Filter } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+
 
 interface WorkerDashboardProps {
   worker: Worker;
   onUpdateWorker: (worker: Worker) => void;
+  initialLanguage?: string; 
+  language: 'en' | 'hi' | 'mr';
 }
+
+const validJobTypes = ['cleaner', 'loader', 'driver'] as const;
+type JobType = typeof validJobTypes[number];
 
 const mockJobs: Job[] = [
   {
@@ -56,22 +67,122 @@ const mockJobs: Job[] = [
     duration: '2 दिन / 2 days',
     postedAt: new Date(),
     status: 'open'
+  },
+  {
+    id: '3',
+    title: 'ड्राइवर का काम / Driver Work',
+    description: 'ट्रक चलाना / Drive truck',
+    payPerDay: 1200,
+    location: 'Nehru Place',
+    pinCode: '110019',
+    contactNumber: '9876543212',
+    contractorName: 'मोहन लाल / Mohan Lal',
+    jobType: 'driver',
+    requiredWorkers: 1,
+    duration: '3 दिन / 3 days',
+    postedAt: new Date(),
+    status: 'open'
   }
 ];
 
-export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashboardProps) {
-  const { t } = useLanguage();
+export default function EnhancedWorkerDashboard({ worker: propWorker, onUpdateWorker }: WorkerDashboardProps) {
+  const location = useLocation();
+    const { t, i18n } = useTranslation();
+  const [language, setLanguage] = useState<string>('en');
   const [activeTab, setActiveTab] = useState<'jobs' | 'profile' | 'payments'>('jobs');
   const [showLocationSelector, setShowLocationSelector] = useState(false);
   const [locationFilter, setLocationFilter] = useState<'nearby' | 'all'>('nearby');
-  const [showCertUpload, setShowCertUpload] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [notificationCount] = useState(3);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
+  const [selectedJobType, setSelectedJobType] = useState<string>('all');
 
-  const toggleAvailability = () => {
-    onUpdateWorker({
-      ...worker,
-      isAvailableToday: !worker.isAvailableToday
-    });
+  type SidebarLabel = 'jobs' | 'profile' | 'payments' | 'notifications' | 'settings' | 'logout' | 'allJobs';
+     useEffect(() => {
+      const storedLang = localStorage.getItem('appLanguage');
+      if (storedLang === 'hi' || storedLang === 'mr' || storedLang === 'en') {
+        i18n.changeLanguage(storedLang); // ✅ Works now
+        setLanguage(storedLang);
+      }
+    }, []); // ✅ Remove i18n from dependency array
+  
+
+const [worker, setWorker] = useState<Worker | null>(() => {
+    const workerData = propWorker || location.state?.worker;
+    if (workerData) {
+      return {
+        ...workerData,
+        language: workerData.language || 'mr' 
+      };
+    }
+    return null;
+  });
+
+  interface WorkerDashboardProps {
+    worker: Worker;
+    onUpdateWorker: (worker: Worker) => void;
+    initialLanguage?: string;
+  }
+  
+  
+  interface SidebarItem {
+    icon: React.ReactNode;
+    label: SidebarLabel;
+    active?: boolean;
+    notification?: number;
+  }
+
+  const translateJobType = (type: string) => {
+    if (validJobTypes.includes(type as JobType)) {
+      return t(type as TranslationKey);
+    }
+    return type;
   };
+
+  const handleUpdateWorker = (updatedWorker: Worker) => {
+    setWorker(updatedWorker);
+    if (onUpdateWorker) {
+      onUpdateWorker(updatedWorker);
+    }
+  };
+
+const toggleAvailability = () => {
+  if (!worker) return;
+  handleUpdateWorker({ 
+    ...worker, 
+    isAvailableToday: !worker.isAvailableToday 
+  });
+};
+  const toggleJobExpansion = (jobId: string) => {
+    setExpandedJobId(expandedJobId === jobId ? null : jobId);
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setSidebarOpen(window.innerWidth >= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const filteredJobs = mockJobs.filter((job) => {
+    const matchesJobType = selectedJobType === 'all' || job.jobType === selectedJobType;
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.description.toLowerCase().includes(searchQuery.toLowerCase());
+
+    return (
+      (locationFilter === 'nearby'
+        ? matchesJobType &&
+          worker?.pinCode &&
+          job?.pinCode &&
+          job.pinCode.startsWith(worker.pinCode.slice(0, 3))
+        : matchesJobType) && matchesSearch
+    );
+  });
 
   const handleCall = (phoneNumber: string) => {
     window.location.href = `tel:${phoneNumber}`;
@@ -82,379 +193,479 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
     setShowLocationSelector(false);
   };
 
-<<<<<<< HEAD
-  const handleLogout = () => {
-    localStorage.clear();
-    window.location.reload();
-  };
-
-=======
->>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
-  const filteredJobs = mockJobs.filter(job => {
-    const matchesJobType = worker.jobTypes.includes(job.jobType);
-    
-    if (locationFilter === 'nearby') {
-      // Show jobs within same pin code area (first 3 digits)
-      return matchesJobType && job.pinCode.startsWith(worker.pinCode.slice(0, 3));
-    } else {
-      // Show all jobs in the city/state
-      return matchesJobType;
-    }
-  });
-
+if (!worker) {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white p-6">
-<<<<<<< HEAD
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              {worker.photo ? (
-                <img src={worker.photo} alt="Profile" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <User className="w-8 h-8" />
-              )}
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{worker.name}</h1>
-              <p className="opacity-90">{worker.phoneNumber}</p>
-              <div className="flex items-center space-x-2 mt-1">
-                <MapPin className="w-4 h-4" />
-                <span>{worker.pinCode}</span>
-                
-                {worker.verificationStatus === 'verified' && (
-                  <div className="bg-green-500 px-2 py-1 rounded-full text-xs flex items-center">
-                    <Award className="w-3 h-3 mr-1" />
-                    {t('verified')}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="text-sm font-medium">Logout</span>
-                <button
-                  onClick={toggleAvailability}
-                  className="flex items-center"
-                >
-                  {worker.isAvailableToday ? (
-                    <ToggleRight className="w-8 h-8 text-green-300" />
-                  ) : (
-                    <ToggleLeft className="w-8 h-8 text-gray-300" />
-                  )}
-                </button>
-              </div>
-              <span className="text-xs">
-                {worker.isAvailableToday ? t('available') : t('busy')}
-              </span>
-            </div>
-            
-            <button
-              onClick={handleLogout}
-              className="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              <LogOut className="w-6 h-6" />
-              <span className="text-xs">लॉगआउट</span>
-            </button>
-          </div>
-
-=======
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-            {worker.photo ? (
-              <img src={worker.photo} alt="Profile" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <User className="w-8 h-8" />
-            )}
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">{worker.name}</h1>
-            <p className="opacity-90">{worker.phoneNumber}</p>
-            <div className="flex items-center space-x-2 mt-1">
-              <MapPin className="w-4 h-4" />
-              <span>{worker.pinCode}</span>
-              {worker.verificationStatus === 'verified' && (
-                <div className="bg-green-500 px-2 py-1 rounded-full text-xs flex items-center">
-                  <Award className="w-3 h-3 mr-1" />
-                  {t('verified')}
-                </div>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={toggleAvailability}
-            className="flex flex-col items-center space-y-1"
-          >
-            {worker.isAvailableToday ? (
-              <ToggleRight className="w-8 h-8 text-green-300" />
-            ) : (
-              <ToggleLeft className="w-8 h-8 text-gray-300" />
-            )}
-            <span className="text-xs">
-              {worker.isAvailableToday ? t('available') : t('busy')}
-            </span>
-          </button>
->>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center p-6 bg-white rounded-xl shadow-md max-w-md w-full">
+        <div className="text-red-500 mb-4">
+          <X size={48} className="mx-auto" />
         </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 p-4 -mt-6 relative z-10">
-        <div className="bg-white rounded-2xl p-4 shadow-lg text-center">
-          <div className="text-2xl font-bold text-blue-600">{worker.totalJobs}</div>
-          <div className="text-sm text-gray-600">{t('totalJobs')}</div>
-        </div>
-        <div className="bg-white rounded-2xl p-4 shadow-lg text-center">
-          <div className="flex items-center justify-center mb-1">
-            <Star className="w-5 h-5 text-yellow-500 mr-1" />
-            <span className="text-2xl font-bold text-yellow-600">{worker.rating.toFixed(1)}</span>
-          </div>
-          <div className="text-sm text-gray-600">{t('rating')}</div>
-        </div>
-        <div className="bg-white rounded-2xl p-4 shadow-lg text-center">
-          <div className="text-2xl font-bold text-green-600">₹{(worker.totalJobs * 850).toLocaleString()}</div>
-          <div className="text-sm text-gray-600">{t('totalEarned')}</div>
-        </div>
-      </div>
-
-      {/* Tab Navigation */}
-      <div className="flex bg-white mx-4 rounded-2xl shadow-lg overflow-hidden">
-        <button
-          onClick={() => setActiveTab('jobs')}
-          className={`flex-1 py-4 px-6 font-semibold transition-colors ${
-            activeTab === 'jobs' 
-              ? 'bg-blue-600 text-white' 
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
+        <h2 className="text-xl font-bold text-gray-800 mb-2">{t('workerDataNotFound')}</h2>
+        <p className="text-gray-600 mb-4">{t('registerAgainMessage')}</p>
+        <button 
+          onClick={() => window.location.href = '/register'}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
-          {t('jobs')}
+          {t('registerNow')}
         </button>
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={`flex-1 py-4 px-6 font-semibold transition-colors ${
-            activeTab === 'profile' 
-              ? 'bg-blue-600 text-white' 
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          {t('profile')}
-        </button>
-        <button
-          onClick={() => setActiveTab('payments')}
-          className={`flex-1 py-4 px-6 font-semibold transition-colors ${
-            activeTab === 'payments' 
-              ? 'bg-blue-600 text-white' 
-              : 'text-gray-600 hover:bg-gray-50'
-          }`}
-        >
-          {t('payments')}
-        </button>
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        {activeTab === 'jobs' && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                {t('jobsForYou')}
-              </h2>
-              <button
-                onClick={() => setShowLocationSelector(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center"
-              >
-                <MapPin className="w-4 h-4 mr-2" />
-                {locationFilter === 'nearby' ? t('nearbyJobs') : t('allJobs')}
-              </button>
-            </div>
-            
-            {showLocationSelector && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-                  <LocationSelector onLocationChoice={handleLocationChoice} />
-                  <button
-                    onClick={() => setShowLocationSelector(false)}
-                    className="w-full mt-4 bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {filteredJobs.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
-                <div className="text-6xl mb-4">😔</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {t('noJobsFound')}
-                </h3>
-                <p className="text-gray-600">
-                  {t('noJobsAvailable')}
-                </p>
-              </div>
-            ) : (
-              filteredJobs.map((job) => (
-                <div key={job.id} className="bg-white rounded-2xl p-6 shadow-lg">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-bold text-gray-900 mb-1">
-                        {job.title}
-                      </h3>
-                      <p className="text-gray-600 mb-2">{job.description}</p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {job.location}
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {job.duration}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-green-600">
-                        ₹{job.payPerDay}
-                      </div>
-                      <div className="text-sm text-gray-500">{t('perDay')}</div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="text-sm text-gray-600">
-                      <strong>{job.contractorName}</strong> {t('postedBy')}
-                    </div>
-                    <button
-                      onClick={() => handleCall(job.contactNumber)}
-                      className="bg-green-500 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors flex items-center"
-                    >
-                      <Phone className="w-4 h-4 mr-2" />
-                      {t('call')}
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {activeTab === 'profile' && (
-          <div className="space-y-6">
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                {t('personalInfo')}
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-600">{t('name')}</label>
-                  <div className="text-lg font-semibold text-gray-900">{worker.name}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">{t('age')}</label>
-                  <div className="text-lg font-semibold text-gray-900">{worker.age}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">{t('phone')}</label>
-                  <div className="text-lg font-semibold text-gray-900">{worker.phoneNumber}</div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-600">{t('pinCode')}</label>
-                  <div className="text-lg font-semibold text-gray-900">{worker.pinCode}</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                {t('jobTypes')}
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {worker.jobTypes.map((jobType) => (
-                  <span
-                    key={jobType}
-                    className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"
-                  >
-                    {t(jobType as any)}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {worker.workerType === 'skilled' && (
-              <div className="bg-white rounded-2xl p-6 shadow-lg">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">
-                    {t('certifications')}
-                  </h3>
-                  <button
-                    onClick={() => setShowCertUpload(!showCertUpload)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center"
-                  >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {t('upload')}
-                  </button>
-                </div>
-                
-                {showCertUpload && (
-                  <div className="bg-blue-50 p-4 rounded-xl mb-4">
-                    <h4 className="font-semibold text-gray-900 mb-2">
-                      {t('uploadCert')}
-                    </h4>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="w-full p-2 border border-gray-300 rounded-lg"
-                    />
-                    <div className="mt-2 text-sm text-gray-600">
-                      Upload government certificates, NGO training, or work proof
-                    </div>
-                  </div>
-                )}
-                
-                <div className="text-center text-gray-500 py-8">
-                  {t('noCertificates')}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {activeTab === 'payments' && (
-          <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              {t('paymentLog')}
-            </h2>
-            
-            <div className="bg-white rounded-2xl p-6 shadow-lg text-center">
-              <div className="text-6xl mb-4">💰</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                {t('paymentRecords')}
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Your work payment records will appear here
-              </p>
-              <div className="bg-gray-50 rounded-xl p-4">
-                <div className="text-sm text-gray-600">
-                  {t('noPaymentRecords')}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
-<<<<<<< HEAD
 }
+  const sidebarItems: SidebarItem[] = [
+    { icon: <Home size={20} />, label: 'jobs', active: activeTab === 'jobs' },
+    { icon: <User size={20} />, label: 'profile', active: activeTab === 'profile' },
+    { icon: <Wallet size={20} />, label: 'payments', active: activeTab === 'payments' },
+    { icon: <Bell size={20} />, label: 'notifications', notification: notificationCount },
+    { icon: <Settings size={20} />, label: 'settings' },
+    { icon: <LogOut size={20} />, label: 'logout' }
+  ];
 
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <AnimatePresence>
+        {sidebarOpen && (
+          <motion.div 
+            initial={{ x: -300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: -300, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className={`bg-gradient-to-b from-indigo-700 to-indigo-900 text-white w-80 fixed md:relative h-screen md:h-full z-30 shadow-2xl`}
+          >
+            <div className="p-5 flex items-center justify-between border-b border-indigo-600">
+              <div className="flex items-center space-x-3">
+                <Briefcase className="text-amber-300" size={26} />
+                <h1 className="text-xl font-bold tracking-tight">WorkerConnect</h1>
+              </div>
+              {isMobile && (
+                <button 
+                  onClick={() => setSidebarOpen(false)}
+                  className="text-white hover:text-amber-200 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+              )}
+            </div>
+            
+            <div className="p-5">
+              <div className="flex items-center space-x-4 mb-6 p-4 bg-indigo-600 rounded-xl shadow-md">
+                <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
+                  {worker.photo ? (
+                    <img src={worker.photo} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="flex items-center justify-center h-full bg-indigo-500">
+                      <User className="w-6 h-6 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-medium truncate">{worker.name}</h3>
+                  <p className="text-xs text-indigo-100 truncate">
+                    {worker.jobTypes.map(type => translateJobType(type)).join(', ')}
+                  </p>
+                </div>
+              </div>
+              
+            <nav className="space-y-2">
+              {sidebarItems.map((item) => (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    if (['jobs', 'profile', 'payments'].includes(item.label)) {
+                      setActiveTab(item.label as 'jobs' | 'profile' | 'payments');
+                    }
+                    if (isMobile && item.label !== 'logout') {
+                      setSidebarOpen(false);
+                    }
+                  }}
+                  className={`flex items-center w-full p-3 rounded-lg transition-all ${
+                    item.active 
+                      ? 'bg-white text-indigo-700 shadow-md' 
+                      : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-50'
+                  }`}
+                >
+                  <span className={`mr-3 ${item.active ? 'text-indigo-600' : 'text-indigo-200'}`}>
+                    {item.icon}
+                  </span>
+                  <span className="font-medium">{t(`sidebar.${item.label}`)}</span>
+                  {item.notification && (
+                    <span className="ml-auto bg-amber-400 text-indigo-900 text-xs font-bold px-2 py-0.5 rounded-full">
+                      {item.notification}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+            </div>
 
+            {/* Footer */}              
+            
+            <div className="absolute bottom-0 left-0 right-0 p-5 border-t border-indigo-600">
+              <div className="flex items-center justify-between">
+                <div className="text-xs text-indigo-200">
+                  v1.0.0
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
+      {/* Main Content */}
+      <div className={`flex-1 transition-all overflow-auto ${sidebarOpen && !isMobile ? 'ml-64' : ''}`}>
+        {/* Mobile Header */}
+        {isMobile && (
+          <div className="bg-indigo-700 text-white p-4 flex justify-between items-center md:hidden shadow-md">
+            <button 
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-1 rounded-md hover:bg-indigo-600 transition-colors"
+            >
+              ☰
+            </button>
+            <h1 className="text-lg font-bold tracking-tight">WorkerConnect</h1>
+            <div className="relative">
+              <Bell size={20} />
+              {notificationCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-amber-400 text-indigo-900 text-xs font-bold px-1.5 rounded-full">
+                  {notificationCount}
+                </span>
+              )}
+            </div>
+          </div>
+        )}
 
+        <div className="p-5 md:p-8 w-full">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
+                {t("welcome")}, <span className="text-indigo-600">{worker.name.split(' ')[0]}</span>!
+              </h1>
+              <p className="text-gray-600">
+                {activeTab === 'jobs' ? t('findJobsForYou') : 
+                 activeTab === 'profile' ? 'Manage your profile details' : 
+                 'View your payment history'}
+              </p>
+            </div>
+            
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              {isMobile && (
+                <button 
+                  onClick={() => setSidebarOpen(!sidebarOpen)}
+                  className="p-2 rounded-lg bg-gray-100 text-gray-700 md:hidden"
+                >
+                  ☰
+                </button>
+              )}
+              <button 
+                onClick={toggleAvailability} 
+                className={`flex items-center px-4 py-2.5 rounded-full transition-all ${
+                  worker.isAvailableToday 
+                    ? 'bg-emerald-100 text-emerald-800 shadow-sm' 
+                    : 'bg-gray-100 text-gray-600'
+                }`}
+              >
+                {worker.isAvailableToday ? (
+                  <>
+                    <ToggleRight className="w-5 h-5 text-emerald-500 mr-2" />
+                    <span className="font-medium">{t('available')}</span>
+                  </>
+                ) : (
+                  <>
+                    <ToggleLeft className="w-5 h-5 text-gray-400 mr-2" />
+                    <span className="font-medium">{t('busy')}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
 
-=======
+          {/* Navigation Tabs */}
+          <div className="flex flex-wrap gap-2 mb-8">
+            {(['jobs', 'profile', 'payments'] as const).map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
+                  activeTab === tab 
+                    ? 'bg-indigo-600 text-white shadow-md' 
+                    : 'bg-white text-gray-700 border hover:bg-gray-50'
+                }`}
+              >
+                {t(tab)}
+              </button>
+            ))}
+          </div>
+
+          {/* Content Area */}
+          <div>
+            {activeTab === 'jobs' && (
+              <div>
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-800">{t('findJobsForYou')}</h2>
+                  
+                  <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                      <input
+                        type="text"
+                        placeholder="Search jobs..."
+                        className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    
+                    <button 
+                      onClick={() => setShowLocationSelector(true)} 
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                    >
+                      <Filter size={16} />
+                      <span className="font-medium">
+                        {locationFilter === 'nearby' ? t('nearbyJobs') : t('allJobs')}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setSelectedJobType('all')}
+                      className={`px-3 py-1 text-sm rounded-lg ${
+                        selectedJobType === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'
+                      }`}
+                    >
+                      All Jobs
+                    </button>
+                    {validJobTypes.map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setSelectedJobType(type)}
+                        className={`px-3 py-1 text-sm rounded-lg ${
+                          selectedJobType === type ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'
+                        }`}
+                      >
+                        {translateJobType(type)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <AnimatePresence>
+                  {showLocationSelector && (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm"
+                    >
+                      <motion.div 
+                        initial={{ scale: 0.9, y: 20 }}
+                        animate={{ scale: 1, y: 0 }}
+                        exit={{ scale: 0.9, y: 20 }}
+                        className="bg-white p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl"
+                      >
+                        <LocationSelector onLocationChoice={handleLocationChoice} />
+                        <button 
+                          onClick={() => setShowLocationSelector(false)} 
+                          className="mt-4 w-full text-center text-gray-600 hover:text-gray-800 transition-colors font-medium"
+                        >
+                          Cancel
+                        </button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {filteredJobs.length === 0 ? (
+                  <div className="bg-white p-8 rounded-xl shadow-sm text-center border border-gray-100">
+                    <img 
+                      src="https://cdn-icons-png.flaticon.com/512/4076/4076478.png" 
+                      alt="No jobs found" 
+                      className="w-32 h-32 mx-auto mb-4 opacity-70"
+                    />
+                    <h3 className="text-lg font-medium text-gray-700 mb-2">{t('noJobsFound')}</h3>
+                    <p className="text-gray-500 mb-4">{t('tryChangingFilters')}</p>
+                    <button 
+                      onClick={() => setLocationFilter(locationFilter === 'nearby' ? 'all' : 'nearby')}
+                      className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+                    >
+                      {locationFilter === 'nearby' ? t('showAllJobs') : t('showNearbyJobs')}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid gap-6">
+                    {filteredJobs.map((job) => (
+                      <motion.div 
+                        key={job.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden"
+                      >
+                        <div 
+                          className="p-5 cursor-pointer"
+                          onClick={() => toggleJobExpansion(job.id)}
+                        >
+                          <div className="flex justify-between items-start gap-4">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold text-gray-800 truncate">{job.title}</h3>
+                              <p className="text-sm text-gray-600 mt-1 line-clamp-1">{job.description}</p>
+                            </div>
+                            <div className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-lg text-sm font-bold whitespace-nowrap">
+                              ₹{job.payPerDay}/day
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center text-sm text-gray-500">
+                              <MapPin className="w-4 h-4 mr-1.5 text-indigo-600" /> 
+                              <span className="truncate max-w-[120px]">{job.location}</span>
+                            </div>
+                            <div className="flex items-center text-sm text-gray-500">
+                              <Calendar className="w-4 h-4 mr-1.5 text-indigo-600" /> 
+                              <span>{job.duration}</span>
+                            </div>
+                            <div className="flex items-center">
+                              {expandedJobId === job.id ? (
+                                <ChevronDown className="w-5 h-5 text-gray-400" />
+                              ) : (
+                                <ChevronRight className="w-5 h-5 text-gray-400" />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <AnimatePresence>
+                          {expandedJobId === job.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="px-5 pb-5 pt-0 border-t border-gray-100">
+                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                  <div>
+                                    <div className="text-xs text-gray-500 font-medium mb-1">{t('postedBy')}</div>
+                                    <div className="font-medium text-gray-800">{job.contractorName}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-gray-500 font-medium mb-1">{t('workersNeeded')}</div>
+                                    <div className="font-bold text-indigo-600">{job.requiredWorkers}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-gray-500 font-medium mb-1">{t('phone')}</div>
+                                    <div className="font-medium text-gray-800">{job.contactNumber}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-gray-500 font-medium mb-1">PIN Code</div>
+                                    <div className="font-medium text-gray-800">{job.pinCode}</div>
+                                  </div>
+                                </div>
+                                
+                                <button
+                                  onClick={() => handleCall(job.contactNumber)}
+                                  className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2.5 rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center justify-center shadow-md hover:shadow-lg font-medium"
+                                >
+                                  <Phone className="w-4 h-4 mr-2" /> 
+                                  <span>{t('callNow')}</span>
+                                </button>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'profile' && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-6"
+              >
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
+                    <User className="mr-2 text-indigo-600" size={20} /> 
+                    {t('personalInfo')}
+                  </h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 block mb-1">{t('name')}</label>
+                      <div className="font-medium text-gray-800">{worker.name}</div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 block mb-1">{t('age')}</label>
+                      <div className="font-medium text-gray-800">{worker.age}</div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 block mb-1">{t('phone')}</label>
+                      <div className="font-medium text-gray-800">{worker.phoneNumber}</div>
+                    </div>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 block mb-1">{t('pinCode')}</label>
+                      <div className="font-medium text-gray-800">{worker.pinCode}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
+                    <Briefcase className="mr-2 text-indigo-600" size={20} /> 
+                    {t('jobTypes')}
+                  </h3>
+                  <div className="flex flex-wrap gap-3">
+                    {worker.jobTypes.map((type) => (
+                      <span
+                        key={type}
+                        className="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-full text-sm font-medium flex items-center shadow-sm"
+                      >
+                        {translateJobType(type)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                  <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
+                    <Settings className="mr-2 text-indigo-600" size={20} /> 
+                    Account Settings
+                  </h3>
+                  <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
+                    Update Profile
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'payments' && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center"
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="w-24 h-24 bg-indigo-100 rounded-full flex items-center justify-center">
+                    <Wallet className="w-12 h-12 text-indigo-600 opacity-80" />
+                  </div>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">{t('paymentRecords')}</h3>
+                <p className="text-gray-500 mb-6">{t('noPaymentRecords')}</p>
+                <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 max-w-md mx-auto border border-gray-200">
+                  {t('yourWorkPaymentsWillAppearHere')}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
->>>>>>> 918e47b69a25f18c24c1ba831f603e85a99d422d
