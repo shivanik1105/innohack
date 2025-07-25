@@ -1,18 +1,9 @@
 import React, { useState } from 'react';
 import { 
   User, MapPin, Award, ToggleRight, ToggleLeft, Phone, Calendar, 
-  Star, Upload, FileText, CreditCard, LogOut 
-  MapPin, 
-  Phone, 
-  Star, 
-  Calendar, 
+  Star, Upload, FileText, CreditCard, LogOut ,
   DollarSign, 
-  User, 
   Camera,
-  Upload,
-  Award,
-  ToggleLeft,
-  ToggleRight
 } from 'lucide-react';
 import { Worker, Job } from '../types/worker';
 import LocationSelector from './LocationSelector';
@@ -440,9 +431,4 @@ export default function WorkerDashboard({ worker, onUpdateWorker }: WorkerDashbo
     </div>
   );
 }
-
-
-
-
-
 }
