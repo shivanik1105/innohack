@@ -1,45 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Phone, ArrowRight, Check } from 'lucide-react';
 import VoiceButton from './VoiceButton';
-import LanguageSelector from './LanguageSelector';
-import { useLanguage } from '../hooks/useLanguage';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 interface PhoneLoginProps {
   onLogin: (phoneNumber: string) => void;
+  onLanguageChange: () => void;
+  language: 'en' | 'hi' | 'mr';
 }
 
-export default function PhoneLogin({ onLogin }: PhoneLoginProps) {
-  const { language, t, changeLanguage } = useLanguage();
+export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProps) {
+  
+  const { t, i18n } = useTranslation();
+  
+    const [language, setLanguage] = useState<string>('en');
+     useEffect(() => {
+      const storedLang = localStorage.getItem('appLanguage');
+      if (storedLang === 'hi' || storedLang === 'mr' || storedLang === 'en') {
+        i18n.changeLanguage(storedLang); // ✅ Works now
+        setLanguage(storedLang);
+      }
+    }, []); // ✅ Remove i18n from dependency array
+  
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'language' | 'phone' | 'otp'>('language');
+  const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [isLoading, setIsLoading] = useState(false);
 
   const handlePhoneSubmit = async () => {
     if (phoneNumber.length === 10) {
       setIsLoading(true);
-      // Simulate OTP sending
+      console.log("OTP correct, calling onLogin with", phoneNumber);
       setTimeout(() => {
         setIsLoading(false);
         setStep('otp');
-      }, 2000);
+      }, 1500);
     }
   };
 
   const handleOtpSubmit = async () => {
     if (otp.length === 6) {
       setIsLoading(true);
-      // Simulate OTP verification
       setTimeout(() => {
         setIsLoading(false);
         onLogin(phoneNumber);
       }, 1500);
     }
-  };
-
-  const handleLanguageSelect = (selectedLanguage: any) => {
-    changeLanguage(selectedLanguage);
-    setStep('phone');
   };
 
   const handleVoiceInput = (text: string) => {
@@ -54,15 +61,6 @@ export default function PhoneLogin({ onLogin }: PhoneLoginProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
-        {step === 'language' && (
-          <LanguageSelector
-            currentLanguage={language}
-            onLanguageChange={handleLanguageSelect}
-          />
-        )}
-
-        {step !== 'language' && (
-          <>
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
             <Phone className="w-10 h-10 text-white" />
@@ -73,12 +71,12 @@ export default function PhoneLogin({ onLogin }: PhoneLoginProps) {
           <p className="text-gray-600">
             {step === 'phone' ? t('phoneLogin') : t('enterOTP')}
           </p>
-          
+
           <button
-            onClick={() => setStep('language')}
+            onClick={onLanguageChange}
             className="mt-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
           >
-            🌐 Change Language
+            🌐 {t('changeLanguage')}
           </button>
         </div>
 
@@ -92,8 +90,10 @@ export default function PhoneLogin({ onLogin }: PhoneLoginProps) {
                 <input
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                  placeholder="9876543210"
+                  onChange={(e) =>
+                    setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))
+                  }
+                  placeholder={t('phonePlaceholder')}
                   className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none"
                   maxLength={10}
                 />
@@ -102,7 +102,7 @@ export default function PhoneLogin({ onLogin }: PhoneLoginProps) {
 
             <VoiceButton
               onVoiceInput={handleVoiceInput}
-              placeholder={`${t('enterPhone')} - Speak your mobile number`}
+              placeholder={`${t('enterPhone')} - ${t('speakNumber')}`}
               className="justify-center"
             />
 
@@ -131,20 +131,22 @@ export default function PhoneLogin({ onLogin }: PhoneLoginProps) {
                 <input
                   type="text"
                   value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="123456"
+                  onChange={(e) =>
+                    setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
+                  }
+                  placeholder={t('otpPlaceholder')}
                   className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none tracking-widest"
                   maxLength={6}
                 />
               </div>
               <p className="text-sm text-gray-500 text-center mt-2">
-                Sent to {phoneNumber}
+                {t('sentTo')} {phoneNumber}
               </p>
             </div>
 
             <VoiceButton
               onVoiceInput={handleVoiceInput}
-              placeholder={`${t('enterOTP')} - Speak OTP code`}
+              placeholder={`${t('enterOTP')} - ${t('speakOTP')}`}
               className="justify-center"
             />
 
@@ -170,8 +172,6 @@ export default function PhoneLogin({ onLogin }: PhoneLoginProps) {
               {t('changeNumber')}
             </button>
           </div>
-        )}
-          </>
         )}
       </div>
     </div>
