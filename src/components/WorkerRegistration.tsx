@@ -1,53 +1,88 @@
-import React, { useState } from 'react';
-import { User, MapPin, Camera, Briefcase, CheckCircle } from 'lucide-react';
-import IconButton from './IconButton';
-import VoiceButton from './VoiceButton';
-import { useLanguage } from '../hooks/useLanguage';
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  User, MapPin, Briefcase, Camera,
+  ChevronRight, Check, ArrowRight
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Worker } from '../types/worker';
+import { useTranslation } from 'react-i18next';
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = (error) => reject(error);
+  });
+}
 
 interface WorkerRegistrationProps {
   phoneNumber: string;
-  onComplete: (workerData: any) => void;
+  onComplete?: (workerData: Worker) => void;
+  language?: 'en' | 'hi' | 'mr';
 }
 
-const dailyJobTypes = [
-  { id: 'helper', hindi: 'सहायक', english: 'Helper', icon: '🤝' },
-  { id: 'loader', hindi: 'लोडर', english: 'Loader', icon: '📦' },
-  { id: 'cleaner', hindi: 'सफाई कर्मी', english: 'Cleaner', icon: '🧹' },
-  { id: 'laborer', hindi: 'मजदूर', english: 'Laborer', icon: '👷' }
-];
+interface FormData {
+  name: string;
+  age: string;
+  pinCode: string;
+  workerType: 'daily' | 'skilled' | '';
+  jobTypes: string[];
+  photo: File | null;
+  isAvailableToday: boolean;
+}
 
-const skilledJobTypes = [
-  { id: 'plumber', hindi: 'नलसाज', english: 'Plumber', icon: '🔧' },
-  { id: 'electrician', hindi: 'बिजली मिस्त्री', english: 'Electrician', icon: '⚡' },
-  { id: 'painter', hindi: 'रंगसाज', english: 'Painter', icon: '🎨' },
-  { id: 'carpenter', hindi: 'बढ़ई', english: 'Carpenter', icon: '🔨' },
-  { id: 'mason', hindi: 'राजमिस्त्री', english: 'Mason', icon: '🧱' },
-  { id: 'welder', hindi: 'वेल्डर', english: 'Welder', icon: '🔥' }
-];
+const jobCategories = {
+  daily: [
+    { id: 'helper', name: 'Helper' },
+    { id: 'loader', name: 'Loader' },
+    { id: 'cleaner', name: 'Cleaner' },
+    { id: 'laborer', name: 'Laborer' }
+  ],
+  
+  
+  skilled: [
+    { id: 'plumber', name: 'Plumber' },
+    { id: 'electrician', name: 'Electrician' },
+    { id: 'painter', name: 'Painter' },
+    { id: 'carpenter', name: 'Carpenter' },
+    { id: 'mason', name: 'Mason' },
+    { id: 'welder', name: 'Welder' }
+  ]
+};
 
-export default function WorkerRegistration({ phoneNumber, onComplete }: WorkerRegistrationProps) {
-  const { t } = useLanguage();
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+export default function WorkerRegistration({ phoneNumber, onComplete, language: propLanguage }: WorkerRegistrationProps) {
+  const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const [language, setLanguage] = useState<'en' | 'hi' | 'mr'>('en');
+
+  useEffect(() => {
+    const storedLang = localStorage.getItem('appLanguage') as 'en' | 'hi' | 'mr' | null;
+    if (storedLang) {
+      i18n.changeLanguage(storedLang);
+      setLanguage(storedLang);
+    } else if (propLanguage) {
+      i18n.changeLanguage(propLanguage);
+      setLanguage(propLanguage);
+    }
+  }, [i18n, propLanguage]);
+
+  const [formData, setFormData] = useState<FormData>({
     name: '',
     age: '',
     pinCode: '',
-    workerType: '' as 'daily' | 'skilled' | '',
-    jobTypes: [] as string[],
-    photo: null as File | null,
-    isAvailableToday: true
+    workerType: '',
+    jobTypes: [],
+    photo: null,
+    isAvailableToday: true,
   });
 
-  const handleVoiceInput = (field: string) => (text: string) => {
-    if (field === 'age') {
-      const numbers = text.replace(/\D/g, '');
-      setFormData(prev => ({ ...prev, [field]: numbers }));
-    } else if (field === 'pinCode') {
-      const numbers = text.replace(/\D/g, '').slice(0, 6);
-      setFormData(prev => ({ ...prev, [field]: numbers }));
-    } else {
-      setFormData(prev => ({ ...prev, [field]: text }));
-    }
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  const handleInputChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, [field]: e.target.value }));
   };
 
   const handleJobTypeToggle = (jobId: string) => {
@@ -59,307 +94,430 @@ export default function WorkerRegistration({ phoneNumber, onComplete }: WorkerRe
     }));
   };
 
-  const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handlePhotoCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert(t('workerRegistration.errors.notImage'));
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert(t('workerRegistration.errors.sizeExceeded'));
+        return;
+      }
       setFormData(prev => ({ ...prev, photo: file }));
     }
   };
 
-  const canProceed = () => {
-    switch (step) {
-      case 1: return formData.name.length > 0;
-      case 2: return formData.age.length > 0 && formData.pinCode.length === 6;
-      case 3: return formData.workerType.length > 0;
-      case 4: return formData.jobTypes.length > 0;
-      default: return true;
+  const validateForm = (): boolean => {
+    if (!formData.name.trim()) {
+      alert(t('workerRegistration.validation.nameRequired'));
+      return false;
+    }
+    const age = parseInt(formData.age);
+    if (isNaN(age)) {
+      alert(t('workerRegistration.validation.ageInvalid'));
+      return false;
+    }
+    if (age < 18 || age > 75) {
+      alert(t('workerRegistration.validation.ageRange'));
+      return false;
+    }
+    if (!/^\d{6}$/.test(formData.pinCode)) {
+      alert(t('workerRegistration.validation.pinInvalid'));
+      return false;
+    }
+    if (!formData.workerType) {
+      alert(t('workerRegistration.validation.workerTypeRequired'));
+      return false;
+    }
+    if (formData.jobTypes.length === 0) {
+      alert(t('workerRegistration.validation.jobTypeRequired'));
+      return false;
+    }
+    if (!formData.photo) {
+      alert(t('workerRegistration.validation.photoRequired'));
+      return false;
+    }
+    return true;
+  };
+
+  const handleComplete = async () => {
+    if (!validateForm()) return;
+    if (!formData.photo) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const base64Photo = await fileToBase64(formData.photo);
+
+      const workerData: Worker = {
+        name: formData.name,
+        phone: phoneNumber,
+        experience: parseInt(formData.age),
+        jobTypes: formData.jobTypes,
+        location: formData.pinCode,
+        photoUrl: base64Photo,
+      };
+
+      if (onComplete) {
+        onComplete(workerData);
+      }
+
+      setShowSuccess(true);
+      setTimeout(() => navigate('/dashboard'), 2000);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      alert(t('workerRegistration.errors.registrationFailed'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleComplete = () => {
-    onComplete({
-      phoneNumber,
-      ...formData,
-      age: parseInt(formData.age),
-      id: Date.now().toString(),
-      rating: 0,
-      totalJobs: 0,
-      verificationStatus: 'pending',
-      createdAt: new Date()
-    });
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
 
+  const buttonHover = {
+    scale: 1.03,
+    transition: { duration: 0.2 }
+  };
+
+  const buttonTap = {
+    scale: 0.98
+  };
+
+  const isFormIncomplete = 
+    !formData.name || 
+    !formData.age || 
+    !formData.pinCode ||
+    !formData.workerType ||
+    formData.jobTypes.length === 0 ||
+    !formData.photo;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Progress Bar */}
-        <div className="bg-white rounded-2xl p-4 mb-6 shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-600">{t('progress')}</span>
-            <span className="text-sm font-medium text-gray-600">{step}/5</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-3">
-            <div 
-              className="bg-gradient-to-r from-green-500 to-blue-500 h-3 rounded-full transition-all duration-500"
-              style={{ width: `${(step / 5) * 100}%` }}
-            ></div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-3xl shadow-2xl p-8">
-          {step === 1 && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
-                <User className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {t('whatsYourName')}
-              </h2>
-              
-              <div className="space-y-4">
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder={t('enterName')}
-                  className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none"
-                />
-                
-                <VoiceButton
-                  onVoiceInput={handleVoiceInput('name')}
-                  placeholder={t('speakName')}
-                  className="justify-center"
+    <div className="bg-gradient-to-tr from-[#fdfbfb] to-[#ebedee] min-h-[100dvh] flex items-center justify-center px-6">
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          >
+            <motion.div 
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="bg-white p-8 rounded-xl max-w-sm w-full text-center"
+            >
+              <Check className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">{t('workerRegistration.registration.complete')}</h3>
+              <p className="text-gray-600 mb-6">{t('workerRegistration.registration.redirecting')}</p>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <motion.div 
+                  className="bg-green-500 h-2 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 1.5 }}
                 />
               </div>
-            </div>
-          )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-          {step === 2 && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
-                <MapPin className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {t('ageAndPin')}
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-2">
-                    {t('age')}
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.age}
-                    onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
-                    placeholder="25"
-                    className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none"
-                    min="18"
-                    max="65"
-                  />
-                  <VoiceButton
-                    onVoiceInput={handleVoiceInput('age')}
-                    placeholder={t('speakAge')}
-                    className="justify-center mt-2"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-lg font-semibold text-gray-700 mb-2">
-                    {t('pinCode')}
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.pinCode}
-                    onChange={(e) => setFormData(prev => ({ ...prev, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
-                    placeholder="110001"
-                    className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none"
-                    maxLength={6}
-                  />
-                  <VoiceButton
-                    onVoiceInput={handleVoiceInput('pinCode')}
-                    placeholder={t('speakPin')}
-                    className="justify-center mt-2"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
-                <Briefcase className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {t('workType')}
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button
-                  onClick={() => setFormData(prev => ({ ...prev, workerType: 'daily' }))}
-                  className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                    formData.workerType === 'daily'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
-                  }`}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl w-full">
+        {/* Left Panel - Navigation */}
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+          className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+        >
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">{t("workerRegistration.title")}</h1>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">{t("workerRegistration.stepsTitle")}</h2>
+          
+          <div className="mb-8">
+            <h3 className="text-md font-medium text-gray-700 mb-3">{t("fillAllSections")}</h3>
+            <p className="text-sm text-gray-500 mb-4">{t("completeFields")}</p>
+            
+            <ul className="space-y-2">
+              {Object.values(t('workerRegistration.sections', { returnObjects: true })).map((section: string) => (
+                <motion.li 
+                  key={section}
+                  whileHover={{ x: 5 }}
+                  className="flex items-center p-2 rounded-md hover:bg-blue-50 cursor-pointer"
                 >
-                  <div className="text-4xl mb-3">👷‍♂️</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {t('dailyWorker')}
-                  </h3>
-                  <p className="text-gray-600">
-                    {t('dailyWage')}
-                  </p>
-                </button>
-                
-                <button
-                  onClick={() => setFormData(prev => ({ ...prev, workerType: 'skilled' }))}
-                  className={`p-6 rounded-2xl border-2 transition-all duration-300 ${
-                    formData.workerType === 'skilled'
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-blue-300'
-                  }`}
-                >
-                  <div className="text-4xl mb-3">🔧</div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
-                    {t('skilledWorker')}
-                  </h3>
-                  <p className="text-gray-600">
-                    {t('specialSkills')}
-                  </p>
-                </button>
-              </div>
-            </div>
-          )}
+                  <ChevronRight className="w-4 h-4 mr-2 text-blue-500" />
+                  {section}
+                </motion.li>
+              ))}
+            </ul>
+          </div>
+        </motion.div>
 
-          {step === 4 && (
-            <div className="text-center space-y-6">
-              <h2 className="text-2xl font-bold text-gray-900">
-                {formData.workerType === 'daily' 
-                  ? t('selectWork')
-                  : t('selectSkills')
-                }
-              </h2>
-              
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {(formData.workerType === 'daily' ? dailyJobTypes : skilledJobTypes).map((job) => (
-                  <button
-                    key={job.id}
-                    onClick={() => handleJobTypeToggle(job.id)}
-                    className={`p-4 rounded-2xl border-2 transition-all duration-300 ${
-                      formData.jobTypes.includes(job.id)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-blue-300'
-                    }`}
-                  >
-                    <div className="text-3xl mb-2">{job.icon}</div>
-                    <div className="font-bold text-gray-900">{t(job.id as any)}</div>
-                  </button>
-                ))}
-              </div>
-              
-              <p className="text-sm text-gray-600">
-                {t('selectOneOrMore')}
+        {/* Middle Panel - Form Input */}
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+        >
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('workerRegistration.personalInfo.title')}</h2>
+          
+          <div className="space-y-6">
+            <div>
+              <p className="text-sm text-gray-500 mb-4">
+                {t('workerRegistration.personalInfo.description')}
               </p>
-            </div>
-          )}
-
-          {step === 5 && (
-            <div className="text-center space-y-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto">
-                <Camera className="w-10 h-10 text-white" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900">
-                {t('takePhoto')}
-              </h2>
               
               <div className="space-y-4">
-                <input
-                  type="file"
-                  accept="image/*"
-                  capture="user"
-                  onChange={handlePhotoCapture}
-                  className="hidden"
-                  id="photo-input"
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('workerRegistration.personalInfo.name')}</label>
+                  <motion.div whileHover={{ scale: 1.01 }}>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={handleInputChange('name')}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder={t('workerRegistration.personalInfo.namePlaceholder')}
+                      required
+                    />
+                  </motion.div>
+                </div>
                 
-                <label
-                  htmlFor="photo-input"
-                  className="inline-block bg-blue-600 text-white px-8 py-4 rounded-2xl font-semibold cursor-pointer hover:bg-blue-700 transition-colors"
-                >
-                  📸 {t('takePhoto')}
-                </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('workerRegistration.personalInfo.age')}</label>
+                  <motion.div whileHover={{ scale: 1.01 }}>
+                    <input
+                      type="number"
+                      value={formData.age}
+                      onChange={handleInputChange('age')}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder={t('workerRegistration.personalInfo.agePlaceholder')}
+                      min="18"
+                      max="75"
+                      required
+                    />
+                  </motion.div>
+                </div>
                 
-                {formData.photo && (
-                  <div className="text-green-600 font-semibold">
-                    ✅ Photo captured
-                  </div>
-                )}
-              </div>
-              
-              <div className="bg-blue-50 p-4 rounded-2xl">
-                <h3 className="font-bold text-gray-900 mb-2">
-                  {t('availableToday')}
-                </h3>
-                <div className="flex justify-center space-x-4">
-                  <button
-                    onClick={() => setFormData(prev => ({ ...prev, isAvailableToday: true }))}
-                    className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                      formData.isAvailableToday
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    ✅ {t('yes')}
-                  </button>
-                  <button
-                    onClick={() => setFormData(prev => ({ ...prev, isAvailableToday: false }))}
-                    className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                      !formData.isAvailableToday
-                        ? 'bg-red-500 text-white'
-                        : 'bg-gray-200 text-gray-700'
-                    }`}
-                  >
-                    ❌ {t('no')}
-                  </button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('workerRegistration.personalInfo.pinCode')}</label>
+                  <motion.div whileHover={{ scale: 1.01 }}>
+                    <input
+                      type="text"
+                      value={formData.pinCode}
+                      onChange={(e) => setFormData(prev => ({ ...prev, pinCode: e.target.value.replace(/\D/g, '').slice(0, 6) }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder={t('workerRegistration.personalInfo.pinPlaceholder')}
+                      maxLength={6}
+                      required
+                    />
+                  </motion.div>
                 </div>
               </div>
             </div>
-          )}
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8">
-            {step > 1 && (
-              <button
-                onClick={() => setStep(step - 1)}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+            <div className="space-y-4">
+              <div className="flex space-x-4">
+                <motion.button
+                  whileHover={buttonHover}
+                  whileTap={buttonTap}
+                  onClick={() => setFormData(prev => ({ 
+                    ...prev, 
+                    workerType: 'daily', 
+                    jobTypes: [] 
+                  }))}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    formData.workerType === 'daily' 
+                      ? 'bg-blue-100 text-blue-700 border-2 border-blue-300' 
+                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  {t('workerRegistration.workType.daily')}
+                </motion.button>
+                <motion.button
+                  whileHover={buttonHover}
+                  whileTap={buttonTap}
+                  onClick={() => setFormData(prev => ({ 
+                    ...prev, 
+                    workerType: 'skilled', 
+                    jobTypes: [] 
+                  }))}
+                  className={`px-4 py-2 rounded-lg transition-colors ${
+                    formData.workerType === 'skilled' 
+                      ? 'bg-blue-100 text-blue-700 border-2 border-blue-300' 
+                      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                  }`}
+                >
+                  {t('workerRegistration.workType.skilled')}
+                </motion.button>
+              </div>
+
+              {formData.workerType && (
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    {formData.workerType === 'daily' 
+                      ? t('workerRegistration.workType.selectDaily') 
+                      : t('workerRegistration.workType.selectSkilled')}
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {(jobCategories[formData.workerType] || []).map((job) => (
+                      
+                      <motion.button
+  key={job.id}
+  whileHover={buttonHover}
+  whileTap={buttonTap}
+  onClick={() => handleJobTypeToggle(job.id)}
+  className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+    formData.jobTypes.includes(job.id)
+      ? 'bg-blue-600 text-white hover:bg-blue-700'
+      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+  }`}
+>
+  {t(`workerRegistration.jobTypes.${job.id}`)}
+</motion.button>
+
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+                        
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-800 mb-4">{t('workerRegistration.photo.title')}</h3>
+              
+              <input
+                type="file"
+                accept="image/*"
+                capture="user"
+                onChange={handlePhotoCapture}
+                className="hidden"
+                id="photo-input"
+              />
+              <motion.label
+                whileHover={buttonHover}
+                whileTap={buttonTap}
+                htmlFor="photo-input"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium cursor-pointer hover:bg-blue-700 transition-colors"
               >
-                ← {t('back')}
-              </button>
-            )}
-            
-            <div className="flex-1"></div>
-            
-            {step < 5 ? (
-              <button
-                onClick={() => setStep(step + 1)}
-                disabled={!canProceed()}
-                className="px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-300"
-              >
-                {t('next')} →
-              </button>
-            ) : (
-              <button
-                onClick={handleComplete}
-                className="px-8 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 flex items-center"
-              >
-                <CheckCircle className="w-5 h-5 mr-2" />
-                {t('complete')}
-              </button>
-            )}
+                <Camera className="w-5 h-5 mr-2" />
+                {t('workerRegistration.photo.upload')}
+              </motion.label>
+              {formData.photo && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="ml-3 text-sm text-green-600 flex items-center"
+                >
+                  <Check className="w-4 h-4 mr-1" /> {t('workerRegistration.photo.uploaded')}
+                </motion.span>
+              )}
+            </div>
           </div>
-        </div>
+        </motion.div>
+
+        {/* Right Panel - Preview */}
+        <motion.div 
+          initial="hidden"
+          animate="visible"
+          variants={cardVariants}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+        >
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('workerRegistration.preview.title')}</h2>
+          
+          <div className="space-y-6">
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('workerRegistration.preview.personal')}</h3>
+              {formData.name && (
+                <p className="text-gray-700 font-medium">{formData.name}</p>
+              )}
+              {formData.age && (
+                <p className="text-gray-700">{t('workerRegistration.personalInfo.age')}: {formData.age}</p>
+              )}
+              {formData.pinCode && (
+                <p className="text-gray-700">{t('workerRegistration.personalInfo.pinCode')}: {formData.pinCode}</p>
+              )}
+            </div>
+            
+            <div className="border-b pb-4">
+              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('workerRegistration.preview.work')}</h3>
+              {formData.workerType && (
+                <p className="text-gray-700 capitalize">
+                  {formData.workerType === 'daily' 
+                    ? t('workerRegistration.workType.daily') 
+                    : t('workerRegistration.workType.skilled')}
+                </p>
+              )}
+              {formData.jobTypes.length > 0 && (
+                <div className="mt-2">
+                  <h4 className="text-sm font-medium text-gray-700 mb-1">
+                    {formData.workerType === 'daily' 
+                      ? t('workerRegistration.preview.selectedJobs') 
+                      : t('workerRegistration.preview.selectedSkills')}
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {formData.jobTypes.map(jobId => {
+                      const job = [...jobCategories.daily, ...jobCategories.skilled].find(j => j.id === jobId);
+                      return job ? (
+                        <motion.span 
+                          key={job.id}
+                          whileHover={{ scale: 1.05 }}
+                          className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                        >
+                          {t(`workerRegistration.jobTypes.${job.id}`)}
+                        </motion.span>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('workerRegistration.preview.photo')}</h3>
+              {formData.photo ? (
+                <motion.div 
+                  whileHover={{ scale: 1.05 }}
+                  className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow-md"
+                >
+                  <img 
+                    src={URL.createObjectURL(formData.photo)} 
+                    alt="Profile" 
+                    className="w-full h-full object-cover"
+                  />
+                </motion.div>
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center shadow-md">
+                  <User className="w-10 h-10 text-gray-400" />
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8">
+              <motion.button
+                whileHover={buttonHover}
+                whileTap={buttonTap}
+                onClick={handleComplete}
+                disabled={isFormIncomplete || isSubmitting}
+                className={`w-full py-3 rounded-lg font-medium flex items-center justify-center ${
+                  isSubmitting ? 'bg-blue-400' : 'bg-blue-600 hover:bg-blue-700'
+                } text-white transition-colors`}
+              >
+                {isSubmitting ? t('workerRegistration.registration.processing') : (
+                  <>
+                    {t('workerRegistration.registration.button')}
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

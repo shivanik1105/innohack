@@ -15,6 +15,7 @@ export interface Worker {
   totalJobs: number;
   verificationStatus: 'pending' | 'verified' | 'rejected';
   createdAt: Date;
+  language: string;
 }
 
 export interface Certification {
