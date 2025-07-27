@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import PhoneLogin from './components/PhoneLogin';
 import WorkerRegistration from './components/WorkerRegistration';
 import WorkerDashboard from './components/WorkerDashboard';
@@ -23,12 +23,21 @@ function App() {
     }
   }, []);
 
+  // ✅ Sync user session from localStorage
+  useEffect(() => {
+    const savedWorker = localStorage.getItem('currentWorker');
+    if (savedWorker) {
+      setWorker(JSON.parse(savedWorker));
+    }
+  }, []);
+
   const handleLogin = (phone: string) => {
     setPhoneNumber(phone);
     const existingWorker = localStorage.getItem(`worker_${phone}`);
     if (existingWorker) {
       const parsed = JSON.parse(existingWorker);
       setWorker(parsed);
+      localStorage.setItem('currentWorker', JSON.stringify(parsed));
       navigate('/dashboard');
     } else {
       navigate('/register');
@@ -38,12 +47,14 @@ function App() {
   const handleRegistrationComplete = (workerData: Worker) => {
     setWorker(workerData);
     localStorage.setItem(`worker_${workerData.phoneNumber}`, JSON.stringify(workerData));
+    localStorage.setItem('currentWorker', JSON.stringify(workerData));
     navigate('/dashboard');
   };
 
   const handleUpdateWorker = (updatedWorker: Worker) => {
     setWorker(updatedWorker);
     localStorage.setItem(`worker_${updatedWorker.phoneNumber}`, JSON.stringify(updatedWorker));
+    localStorage.setItem('currentWorker', JSON.stringify(updatedWorker));
   };
 
   const handleLanguageChange = (lang: 'en' | 'hi' | 'mr') => {
@@ -56,10 +67,8 @@ function App() {
   return (
     <div className="min-h-screen">
       <Routes>
-        {/* Landing page */}
         <Route path="/" element={<LandingPage />} />
 
-        {/* Language selection route */}
         <Route 
           path="/select-language" 
           element={
@@ -70,7 +79,6 @@ function App() {
           } 
         />
 
-        {/* Login route */}
         <Route 
           path="/login" 
           element={
@@ -81,19 +89,21 @@ function App() {
           } 
         />
 
-        {/* Registration route */}
         <Route
           path="/register"
           element={
-            <WorkerRegistration
-              phoneNumber={phoneNumber}
-              onComplete={handleRegistrationComplete}
-              language={language}
-            />
+            phoneNumber ? (
+              <WorkerRegistration
+                phoneNumber={phoneNumber}
+                onComplete={handleRegistrationComplete}
+                language={language}
+              />
+            ) : (
+              <Navigate to="/login" />
+            )
           }
         />
 
-        {/* Dashboard route */}
         <Route
           path="/dashboard"
           element={
@@ -104,18 +114,13 @@ function App() {
                 language={language}
               />
             ) : (
-              <div className="text-center mt-20">
-                <p className="text-red-500">Please log in first.</p>
-                <button 
-                  onClick={() => navigate('/login')}
-                  className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
-                >
-                  Go to Login
-                </button>
-              </div>
+              <Navigate to="/login" />
             )
           }
         />
+
+        {/* Catch-all for undefined routes */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </div>
   );

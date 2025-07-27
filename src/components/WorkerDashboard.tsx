@@ -11,21 +11,21 @@ import {
   Wallet,
   Briefcase,
   Bell,
-  Settings,
-  LogOut
+  LogOut,
+  Edit,
+  Mail,
+  ChevronDown,
+  ChevronRight,
+  Search,
+  X,
+  Filter
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Worker, Job } from '../types/worker';
 import LocationSelector from './LocationSelector';
 import { useLanguage } from '../hooks/useLanguage';
 import { TranslationKey } from '/Users/janhvi/innohack1/innohack/src/utils/translations.ts';
-import { Search } from 'lucide-react';
-import { X } from 'lucide-react';
-import { Filter } from 'lucide-react';
-import { ChevronDown } from 'lucide-react';
-import { ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-
 
 interface WorkerDashboardProps {
   worker: Worker;
@@ -85,11 +85,18 @@ const mockJobs: Job[] = [
   }
 ];
 
+interface SidebarItemProps {
+  icon: React.ReactNode;
+  label: string;
+  active?: boolean;
+  notification?: number;
+}
+
 export default function EnhancedWorkerDashboard({ worker: propWorker, onUpdateWorker }: WorkerDashboardProps) {
   const location = useLocation();
-    const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [language, setLanguage] = useState<string>('en');
-  const [activeTab, setActiveTab] = useState<'jobs' | 'profile' | 'payments'>('jobs');
+  const [activeTab, setActiveTab] = useState<'jobs' | 'profile' | 'payments' | 'aadhaar'>('jobs');
   const [showLocationSelector, setShowLocationSelector] = useState(false);
   const [locationFilter, setLocationFilter] = useState<'nearby' | 'all'>('nearby');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -98,18 +105,18 @@ export default function EnhancedWorkerDashboard({ worker: propWorker, onUpdateWo
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [selectedJobType, setSelectedJobType] = useState<string>('all');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editedWorker, setEditedWorker] = useState<Worker | null>(null);
 
-  type SidebarLabel = 'jobs' | 'profile' | 'payments' | 'notifications' | 'settings' | 'logout' | 'allJobs';
-     useEffect(() => {
-      const storedLang = localStorage.getItem('appLanguage');
-      if (storedLang === 'hi' || storedLang === 'mr' || storedLang === 'en') {
-        i18n.changeLanguage(storedLang); // ✅ Works now
-        setLanguage(storedLang);
-      }
-    }, []); // ✅ Remove i18n from dependency array
-  
+  useEffect(() => {
+    const storedLang = localStorage.getItem('appLanguage');
+    if (storedLang === 'hi' || storedLang === 'mr' || storedLang === 'en') {
+      i18n.changeLanguage(storedLang);
+      setLanguage(storedLang);
+    }
+  }, []);
 
-const [worker, setWorker] = useState<Worker | null>(() => {
+  const [worker, setWorker] = useState<Worker | null>(() => {
     const workerData = propWorker || location.state?.worker;
     if (workerData) {
       return {
@@ -120,19 +127,11 @@ const [worker, setWorker] = useState<Worker | null>(() => {
     return null;
   });
 
-  interface WorkerDashboardProps {
-    worker: Worker;
-    onUpdateWorker: (worker: Worker) => void;
-    initialLanguage?: string;
-  }
-  
-  
-  interface SidebarItem {
-    icon: React.ReactNode;
-    label: SidebarLabel;
-    active?: boolean;
-    notification?: number;
-  }
+  useEffect(() => {
+    if (worker) {
+      setEditedWorker({ ...worker });
+    }
+  }, [worker]);
 
   const translateJobType = (type: string) => {
     if (validJobTypes.includes(type as JobType)) {
@@ -148,13 +147,14 @@ const [worker, setWorker] = useState<Worker | null>(() => {
     }
   };
 
-const toggleAvailability = () => {
-  if (!worker) return;
-  handleUpdateWorker({ 
-    ...worker, 
-    isAvailableToday: !worker.isAvailableToday 
-  });
-};
+  const toggleAvailability = () => {
+    if (!worker) return;
+    handleUpdateWorker({ 
+      ...worker, 
+      isAvailableToday: !worker.isAvailableToday 
+    });
+  };
+
   const toggleJobExpansion = (jobId: string) => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
   };
@@ -193,31 +193,58 @@ const toggleAvailability = () => {
     setShowLocationSelector(false);
   };
 
-if (!worker) {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center p-6 bg-white rounded-xl shadow-md max-w-md w-full">
-        <div className="text-red-500 mb-4">
-          <X size={48} className="mx-auto" />
+  const handleEditProfile = () => {
+    setIsEditingProfile(true);
+  };
+
+  const handleSaveProfile = () => {
+    if (editedWorker) {
+      handleUpdateWorker(editedWorker);
+    }
+    setIsEditingProfile(false);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingProfile(false);
+    if (worker) {
+      setEditedWorker({ ...worker });
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (editedWorker) {
+      setEditedWorker({
+        ...editedWorker,
+        [e.target.name]: e.target.value
+      });
+    }
+  };
+
+  if (!worker || !editedWorker) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center p-6 bg-white rounded-xl shadow-md max-w-md w-full">
+          <div className="text-red-500 mb-4">
+            <X size={48} className="mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">{t('workerDataNotFound')}</h2>
+          <p className="text-gray-600 mb-4">{t('registerAgainMessage')}</p>
+          <button 
+            onClick={() => window.location.href = '/register'}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {t('registerNow')}
+          </button>
         </div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">{t('workerDataNotFound')}</h2>
-        <p className="text-gray-600 mb-4">{t('registerAgainMessage')}</p>
-        <button 
-          onClick={() => window.location.href = '/register'}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          {t('registerNow')}
-        </button>
       </div>
-    </div>
-  );
-}
-  const sidebarItems: SidebarItem[] = [
+    );
+  }
+
+  const sidebarItems: SidebarItemProps[] = [
     { icon: <Home size={20} />, label: 'jobs', active: activeTab === 'jobs' },
     { icon: <User size={20} />, label: 'profile', active: activeTab === 'profile' },
     { icon: <Wallet size={20} />, label: 'payments', active: activeTab === 'payments' },
-    { icon: <Bell size={20} />, label: 'notifications', notification: notificationCount },
-    { icon: <Settings size={20} />, label: 'settings' },
+    { icon: <User size={20} />, label: 'aadhaar', active: activeTab === 'aadhaar' },
     { icon: <LogOut size={20} />, label: 'logout' }
   ];
 
@@ -267,40 +294,39 @@ if (!worker) {
                 </div>
               </div>
               
-            <nav className="space-y-2">
-              {sidebarItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    if (['jobs', 'profile', 'payments'].includes(item.label)) {
-                      setActiveTab(item.label as 'jobs' | 'profile' | 'payments');
-                    }
-                    if (isMobile && item.label !== 'logout') {
-                      setSidebarOpen(false);
-                    }
-                  }}
-                  className={`flex items-center w-full p-3 rounded-lg transition-all ${
-                    item.active 
-                      ? 'bg-white text-indigo-700 shadow-md' 
-                      : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-50'
-                  }`}
-                >
-                  <span className={`mr-3 ${item.active ? 'text-indigo-600' : 'text-indigo-200'}`}>
-                    {item.icon}
-                  </span>
-                  <span className="font-medium">{t(`sidebar.${item.label}`)}</span>
-                  {item.notification !== undefined && (
-                    <span className="ml-auto bg-amber-400 text-indigo-900 text-xs font-bold px-2 py-0.5 rounded-full">
-                      {item.notification}
+              <nav className="space-y-2">
+                {sidebarItems.map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      if (['jobs', 'profile', 'payments', 'aadhaar'].includes(item.label)) {
+                        setActiveTab(item.label as 'jobs' | 'profile' | 'payments' | 'aadhaar');
+                      }
+                      if (isMobile && item.label !== 'logout') {
+                        setSidebarOpen(false);
+                      }
+                    }}
+                    className={`flex items-center w-full p-3 rounded-lg transition-all ${
+                      item.active 
+                        ? 'bg-white text-indigo-700 shadow-md' 
+                        : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-50'
+                    }`}
+                  >
+                    <span className={`mr-3 ${item.active ? 'text-indigo-600' : 'text-indigo-200'}`}>
+                      {item.icon}
                     </span>
-                  )}
-                </button>
-              ))}
-            </nav>
+                    <span className="font-medium">{t(`sidebar.${item.label}`)}</span>
+                    {item.notification !== undefined && (
+                      <span className="ml-auto bg-amber-400 text-indigo-900 text-xs font-bold px-2 py-0.5 rounded-full">
+                        {item.notification}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </nav>
             </div>
 
             {/* Footer */}              
-            
             <div className="absolute bottom-0 left-0 right-0 p-5 border-t border-indigo-600">
               <div className="flex items-center justify-between">
                 <div className="text-xs text-indigo-200">
@@ -344,8 +370,9 @@ if (!worker) {
               </h1>
               <p className="text-gray-600">
                 {activeTab === 'jobs' ? t('findJobsForYou') : 
-                 activeTab === 'profile' ? 'Manage your profile details' : 
-                 'View your payment history'}
+                 activeTab === 'profile' ? t('manageProfileDetails') : 
+                 activeTab === 'payments' ? t('viewPaymentHistory') :
+                 t('aadhaarCardTitle')}
               </p>
             </div>
             
@@ -383,7 +410,7 @@ if (!worker) {
 
           {/* Navigation Tabs */}
           <div className="flex flex-wrap gap-2 mb-8">
-            {(['jobs', 'profile', 'payments'] as const).map(tab => (
+            {(['jobs', 'profile', 'payments', 'aadhaar'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -410,7 +437,7 @@ if (!worker) {
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
                       <input
                         type="text"
-                        placeholder="Search jobs..."
+                        placeholder={t('searchJobsPlaceholder')}
                         className="w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -437,7 +464,7 @@ if (!worker) {
                         selectedJobType === 'all' ? 'bg-indigo-600 text-white' : 'bg-gray-100 text-gray-700 border border-gray-300'
                       }`}
                     >
-                      All Jobs
+                      {t('AllJobs')}
                     </button>
                     {validJobTypes.map((type) => (
                       <button
@@ -472,7 +499,7 @@ if (!worker) {
                           onClick={() => setShowLocationSelector(false)} 
                           className="mt-4 w-full text-center text-gray-600 hover:text-gray-800 transition-colors font-medium"
                         >
-                          Cancel
+                          {t('cancel')}
                         </button>
                       </motion.div>
                     </motion.div>
@@ -592,27 +619,204 @@ if (!worker) {
                 className="space-y-6"
               >
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
-                    <User className="mr-2 text-indigo-600" size={20} /> 
-                    {t('personalInfo')}
-                  </h3>
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-lg font-bold text-gray-800 flex items-center">
+                      <User className="mr-2 text-indigo-600" size={20} /> 
+                      {t('personalInfo')}
+                    </h3>
+                    {!isEditingProfile ? (
+                      <button 
+                        onClick={handleEditProfile}
+                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                      >
+                        <Edit size={16} />
+                        <span>{t('editProfile')}</span>
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={handleCancelEdit}
+                          className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                        >
+                          {t('cancel')}
+                        </button>
+                        <button 
+                          onClick={handleSaveProfile}
+                          className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                        >
+                          {t('saveChanges')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
                   <div className="grid md:grid-cols-2 gap-4">
+                    {/* Profile Picture Section */}
+                    <div className="md:col-span-2 flex flex-col items-center mb-4">
+                      <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-indigo-100 shadow-md mb-4">
+                        {worker.photo ? (
+                          <img src={worker.photo} alt="Profile" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="flex items-center justify-center h-full bg-gray-200">
+                            <User className="w-10 h-10 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      {isEditingProfile && (
+                        <div className="flex gap-2">
+                          <button className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors">
+                            {t('uploadNewPicture')}
+                          </button>
+                          <button className="px-3 py-1 text-sm bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors">
+                            {t('remove')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Basic Info Section */}
+                    <div className="md:col-span-2">
+                      <h4 className="text-md font-semibold text-gray-700 mb-3 border-b pb-2">Basic Info</h4>
+                    </div>
+
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <label className="text-xs text-gray-500 block mb-1">{t('name')}</label>
-                      <div className="font-medium text-gray-800">{worker.name}</div>
+                      {isEditingProfile ? (
+                        <input
+                          type="text"
+                          name="name"
+                          value={editedWorker.name}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      ) : (
+                        <div className="font-medium text-gray-800">{worker.name}</div>
+                      )}
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                      <label className="text-xs text-gray-500 block mb-1">{t('age')}</label>
-                      <div className="font-medium text-gray-800">{worker.age}</div>
+                      <label className="text-xs text-gray-500 block mb-1">
+                        {t('dateOfBirth')}
+                      </label>
+                      {isEditingProfile ? (
+                        <input
+                          type="date"
+                          name="dateOfBirth"
+                          value={editedWorker.dateOfBirth || ''}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          placeholder={t('dateFormat')}
+                        />
+                      ) : (
+                        <div className="font-medium text-gray-800">
+                          {worker.dateOfBirth ? 
+                            new Date(worker.dateOfBirth).toLocaleDateString(i18n.language) : 
+                            t('notSpecified')}
+                        </div>
+                      )}
                     </div>
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <label className="text-xs text-gray-500 block mb-1">
+                            {t('workerRegistration.personalInfo.label')}
+                          </label>
+                          {isEditingProfile ? (
+                            <select
+                              name="gender"
+                              value={editedWorker.gender || ''}
+                              onChange={(e) => setEditedWorker({ 
+                                ...editedWorker, 
+                                gender: e.target.value as 'male' | 'female' | 'other' | 'prefer-not-to-say' 
+                              })}
+                              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="male">{t('workerRegistration.personalInfo.male')}</option>
+                              <option value="female">{t('workerRegistration.personalInfo.female')}</option>
+                          </select>
+                          ) : (
+                            <div className="font-medium text-gray-800">
+                              {worker.gender ? 
+                                t(`workerRegistration.personalInfo.${worker.gender}`) : 
+                                t('workerRegistration.personalInfo.selectPlaceholder')}
+                            </div>
+                          )}
+                        </div>
+                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                          <label className="text-xs text-gray-500 block mb-1">
+                            {t('email')}
+                          </label>
+                          {isEditingProfile ? (
+                            <input
+                              type="email"
+                              name="email"
+                              value={editedWorker.email || ''}
+                              onChange={handleInputChange}
+                              className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              placeholder={t('emailPlaceholder')}
+                            />
+                          ) : (
+                            <div className="font-medium text-gray-800 flex items-center">
+                              <Mail className="mr-2 text-indigo-600" size={16} />
+                              {worker.email || t('notSpecified')}
+                            </div>
+                          )}
+                        </div>
+                    {/* Account Info Section */}
+                    <div className="md:col-span-2 mt-4">
+                      <h4 className="text-md font-semibold text-gray-700 mb-3 border-b pb-2">Account Info</h4>
+                    </div>
+
+                    
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                      <label className="text-xs text-gray-500 block mb-1">{t('aadhaarNumber')}</label>
+                      {isEditingProfile ? (
+                        <input
+                          type="text"
+                          name="aadhaarNumber"
+                          value={editedWorker.aadhaarNumber || ''}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      ) : (
+                        <div className="font-medium text-gray-800">{worker.aadhaarNumber || 'Not specified'}</div>
+                      )}
+                    </div>
+
+
+
+                    {/* Contact Info Section */}
+                    <div className="md:col-span-2 mt-4">
+                      <h4 className="text-md font-semibold text-gray-700 mb-3 border-b pb-2">Contact Info</h4>
+                    </div>
+
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <label className="text-xs text-gray-500 block mb-1">{t('phone')}</label>
-                      <div className="font-medium text-gray-800">{worker.phoneNumber}</div>
+                      {isEditingProfile ? (
+                        <input
+                          type="tel"
+                          name="phoneNumber"
+                          value={editedWorker.phoneNumber || ''}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      ) : (
+                        <div className="font-medium text-gray-800">{worker.phoneNumber || 'Not specified'}</div>
+                      )}
                     </div>
+
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <label className="text-xs text-gray-500 block mb-1">{t('pinCode')}</label>
-                      <div className="font-medium text-gray-800">{worker.pinCode}</div>
+                      {isEditingProfile ? (
+                        <input
+                          type="text"
+                          name="pinCode"
+                          value={editedWorker.pinCode || ''}
+                          onChange={handleInputChange}
+                          className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      ) : (
+                        <div className="font-medium text-gray-800">{worker.pinCode || 'Not specified'}</div>
+                      )}
                     </div>
+
                   </div>
                 </div>
                 
@@ -631,16 +835,6 @@ if (!worker) {
                       </span>
                     ))}
                   </div>
-                </div>
-                
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
-                    <Settings className="mr-2 text-indigo-600" size={20} /> 
-                    Account Settings
-                  </h3>
-                  <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
-                    Update Profile
-                  </button>
                 </div>
               </motion.div>
             )}
@@ -661,6 +855,29 @@ if (!worker) {
                 <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 max-w-md mx-auto border border-gray-200">
                   {t('yourWorkPaymentsWillAppearHere')}
                 </div>
+              </motion.div>
+            )}
+
+            {activeTab === 'aadhaar' && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white p-8 rounded-xl shadow-sm border border-gray-100 text-center"
+              >
+                <h3 className="text-xl font-bold text-gray-800 mb-4">{t('aadhaarCardTitle') || 'Your Aadhaar Card'}</h3>
+                
+                {worker.aadhaarCardImage ? (
+                  <div className="flex flex-col items-center">
+                    <img 
+                      src={worker.aadhaarCardImage} 
+                      alt="Aadhaar Card"
+                      className="w-full max-w-md rounded-lg shadow-md border"
+                    />
+                    <p className="text-gray-500 text-sm mt-2">{t('aadhaarCardUploaded') || 'This is the Aadhaar card you uploaded during registration.'}</p>
+                  </div>
+                ) : (
+                  <div className="text-gray-600">{t('aadhaarNotUploaded') || 'No Aadhaar card uploaded.'}</div>
+                )}
               </motion.div>
             )}
           </div>
