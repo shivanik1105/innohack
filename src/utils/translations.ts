@@ -145,7 +145,7 @@ export const translations = {
     timePeriod: 'Time Period',
     // Hero Section
     heroTitle: "Connect with Trusted Employers",
-    heroSubtitle: "Connect with trusted employers and build your career in the trades. Whether you need daily work or want to showcase your skills, we're here for you.",
+    heroSubtitle: "Connect with trusted employers and build your clyareer in the trades. Whether you need daily work or want to showcase your skills, we're here for you.",
     workersCount: "10,000+ Workers",
     citiesCount: "50+ Cities",
     supportText: "24/7 Support",
