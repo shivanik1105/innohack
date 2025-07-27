@@ -18,7 +18,7 @@ import './i18n';
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>         {/* ✅ Add this wrapper */}
+    <BrowserRouter>         
       <App />
     </BrowserRouter>
   </React.StrictMode>

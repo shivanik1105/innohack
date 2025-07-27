@@ -1,8 +1,11 @@
 import { Job, Worker } from '../types/worker'; // Assuming your types are in this file
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+// --- CORRECTED for Vite ---
+// In Vite, environment variables are accessed via `import.meta.env`
+// and must be prefixed with VITE_ in your .env file.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
-/*
+/**
  * A helper function to handle API responses and errors.
  * @param response The raw response from the fetch call.
  */
@@ -15,7 +18,7 @@ const handleResponse = async (response: Response) => {
   return response.json();
 };
 
-/*
+/**
  * Sends the Firebase ID token to the backend to register or log in a user.
  * @param token The Firebase ID token from the frontend.
  * @returns The user data from the backend.
@@ -36,7 +39,7 @@ export const registerOrLoginUser = async (token: string): Promise<{ isNewUser: b
   }
 };
 
-/*
+/**
  * Creates or updates a user's profile on the backend.
  * @param uid The user's unique Firebase ID.
  * @param profileData The data to update.
@@ -57,7 +60,8 @@ export const updateUserProfile = async (uid: string, profileData: Partial<Worker
     throw error;
   }
 };
-/*
+
+/**
  * Fetches a list of jobs from the backend based on a pincode.
  * @param pincode The 6-digit pincode to search for.
  * @returns A promise that resolves to an array of Job objects.
@@ -72,7 +76,7 @@ export const getJobsByPincode = async (pincode: string): Promise<Job[]> => {
   }
 };
 
-/*
+/**
  * Uploads a certificate for verification.
  * @param uid The user's unique Firebase ID.
  * @param imageFile The image file of the certificate.

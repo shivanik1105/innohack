@@ -404,7 +404,14 @@ export const translations = {
         "photoHeader": "Photo",
         "selectedJobs": "Selected Jobs",
         "selectedSkills": "Selected Skills"
-      }
+      },
+      choose_language: "Choose Language",
+      footerBrand: "WorkerConnect",
+      availableNationwide: "Available Nationwide",
+      phoneNumber: "Phone: +91 12345 67890",
+      emailAddress: "Email: support@workerconnect.com",
+      paymentHistory: "Payment History",
+      support: "Support",
     }
 
   }
@@ -815,7 +822,15 @@ export const translations = {
           "photoHeader": "फोटो",
           "selectedJobs": "चयनित नौकरियाँ",
           "selectedSkills": "चयनित कौशल"
-        }    }
+        }    ,
+        choose_language: "भाषा चुनें",
+            footerBrand: "वर्करकनेक्ट",
+      availableNationwide: "पूरे देश में उपलब्ध",
+      phoneNumber: "फ़ोन: +91 12345 67890",
+      emailAddress: "ईमेल: support@workerconnect.com",
+      paymentHistory: "भुगतान इतिहास",
+      support: "सहायता",
+    }
   }
      
     }
@@ -1218,12 +1233,20 @@ export const translations = {
           "photoHeader": "फोटो",
           "selectedJobs": "निवडलेली कामे",
           "selectedSkills": "निवडलेली कौशल्ये"
-        }
+        },
+        choose_language: "भाषा निवडा",
+        footerBrand: "वर्करकनेक्ट",
+      availableNationwide: "देशभरात उपलब्ध",
+      phoneNumber: "फोन: +९१ १२३४५ ६७८९०",
+      emailAddress: "ईमेल: support@workerconnect.com",
+      paymentHistory: "पेमेंट इतिहास",
+      support: "समर्थन",
       }
   }
     }
   }
 };
+
 
 
 type DeepKeys<T> = T extends object ? {
@@ -1237,3 +1260,5 @@ type DeepKeys<T> = T extends object ? {
 export type Language = 'en' | 'hi' | 'mr';
 // Ensure 'en' has all keys for type checking
 export type TranslationKey = DeepKeys<typeof translations.en.translation>;
+
+
