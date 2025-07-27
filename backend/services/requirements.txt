@@ -1,5 +1,10 @@
 streamlit
 pandas
 scikit-learn
+pytesseract
+opencv-python
+Pillow
+numpy
+pytest
 numpy
 matplotlib

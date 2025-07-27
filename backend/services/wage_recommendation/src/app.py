@@ -33,7 +33,7 @@
 # app.py
 import streamlit as st
 from utils.helpers import preprocess_data
-from model.recommender import WageRecommender
+from project.backend.services.wage_recommendation_app.src.model.train import WageRecommender
 
 def main():
     st.title("Daily Wage Recommendation System")

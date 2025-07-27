@@ -1,0 +1,1171 @@
+<!-- <!DOCTYPE html>
+<html>
+  <head>
+    <title>Construction Company Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      #map {
+        height: 100vh;
+        width: 75%;
+        float: right;
+      }
+      #sidebar {
+        width: 25%;
+        height: 100vh;
+        overflow-y: auto;
+        padding: 10px;
+        box-sizing: border-box;
+        background: #f4f4f4;
+      }
+      .company {
+        margin-bottom: 15px;
+        cursor: pointer;
+        padding: 10px;
+        background: white;
+        border-radius: 5px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sidebar">
+      <h3>Nearby Construction Companies</h3>
+      <div id="company-list"></div>
+    </div>
+    <div id="map"></div>
+
+    <script>
+      let map;
+      let infoWindow;
+
+      // Static custom companies
+      const customCompanies = [
+        { name: "ABC Constructions", lat: 19.075983, lng: 72.877655 },
+        { name: "Mistry Group", lat: 19.080000, lng: 72.870000 },
+      ];
+
+      function initMap() {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const userLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+
+          map = new google.maps.Map(document.getElementById("map"), {
+            center: userLocation,
+            zoom: 13,
+          });
+
+          new google.maps.Marker({
+            position: userLocation,
+            map,
+            title: "You are here",
+            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
+          });
+
+          infoWindow = new google.maps.InfoWindow();
+
+          addCustomCompanies();
+          searchNearbyCompanies(userLocation);
+        });
+      }
+
+      function addCustomCompanies() {
+        customCompanies.forEach((company) => {
+          const marker = new google.maps.Marker({
+            position: { lat: company.lat, lng: company.lng },
+            map,
+            title: company.name,
+          });
+          marker.addListener("click", () => {
+            infoWindow.setContent(`<h4>${company.name}</h4><p>Custom Listed</p>`);
+            infoWindow.open(map, marker);
+          });
+          appendToSidebar(company);
+        });
+      }
+
+      function searchNearbyCompanies(userLocation) {
+        const request = {
+          location: userLocation,
+          radius: 5000,
+          keyword: "construction company",
+        };
+
+        const service = new google.maps.places.PlacesService(map);
+        service.nearbySearch(request, (results, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK) {
+            results.forEach((place) => {
+              const marker = new google.maps.Marker({
+                map,
+                position: place.geometry.location,
+                title: place.name,
+              });
+              marker.addListener("click", () => {
+                infoWindow.setContent(`<h4>${place.name}</h4><p>Google Places</p>`);
+                infoWindow.open(map, marker);
+              });
+              appendToSidebar({
+                name: place.name,
+                lat: place.geometry.location.lat(),
+                lng: place.geometry.location.lng(),
+              });
+            });
+          }
+        });
+      }
+
+      function appendToSidebar(company) {
+        const listDiv = document.getElementById("company-list");
+        const item = document.createElement("div");
+        item.className = "company";
+        item.textContent = company.name;
+        item.onclick = () => {
+          map.setCenter({ lat: company.lat, lng: company.lng });
+          map.setZoom(15);
+        };
+        listDiv.appendChild(item);
+      }
+    </script>
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBpdRzYsQBm2oiayVrixZnuoo5QTZbdBAU&libraries=places&callback=initMap"
+      async
+      defer
+    ></script>
+  </body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Construction Companies Map</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body, html {
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f8f9fa;
+    }
+
+    #container {
+      display: flex;
+      height: 100vh;
+    }
+
+    #sidebar {
+      width: 350px;
+      background: #fff;
+      overflow-y: auto;
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      z-index: 1000;
+    }
+
+    .sidebar-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .sidebar-header h2 {
+      margin: 0;
+      font-size: 1.5em;
+      font-weight: 600;
+    }
+
+    .controls {
+      padding: 20px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.3s;
+    }
+
+    .search-box:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .filter-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .filter-btn {
+      flex: 1;
+      padding: 8px 12px;
+      border: 2px solid #e9ecef;
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.3s;
+    }
+
+    .filter-btn.active {
+      background: #667eea;
+      color: white;
+      border-color: #667eea;
+    }
+
+    .filter-btn:hover {
+      border-color: #667eea;
+    }
+
+    #company-list {
+      padding: 10px;
+    }
+
+    .company-card {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .company-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .company-header {
+      padding: 15px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .company-name {
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 5px;
+      color: #2c3e50;
+    }
+
+    .company-type {
+      font-size: 12px;
+      color: #6c757d;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .company-details {
+      padding: 15px;
+    }
+
+    .company-address {
+      font-size: 14px;
+      color: #495057;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .company-rating {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .stars {
+      color: #ffc107;
+    }
+
+    .rating-text {
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    .company-distance {
+      font-size: 12px;
+      color: #28a745;
+      font-weight: 600;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.3s;
+      flex: 1;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5a6fd8;
+    }
+
+    .btn-outline {
+      background: white;
+      color: #667eea;
+      border: 1px solid #667eea;
+    }
+
+    .btn-outline:hover {
+      background: #667eea;
+      color: white;
+    }
+
+    #map {
+      flex-grow: 1;
+      height: 100%;
+      position: relative;
+    }
+
+    .directions-panel {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 300px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      z-index: 1000;
+      display: none;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+
+    .directions-header {
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 12px 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      background: rgba(255,255,255,0.2);
+    }
+
+    .directions-content {
+      padding: 15px;
+    }
+
+    .route-info {
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+    }
+
+    .route-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .distance {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .duration {
+      font-size: 14px;
+      color: #6c757d;
+    }
+
+    .travel-mode {
+      font-size: 12px;
+      color: #28a745;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .directions-steps {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .step {
+      padding: 8px 0;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .step:last-child {
+      border-bottom: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #6c757d;
+    }
+
+    .status-message {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 24px;
+      background: #28a745;
+      color: white;
+      border-radius: 8px;
+      z-index: 2000;
+      display: none;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .status-message.error {
+      background: #dc3545;
+    }
+
+    @media (max-width: 768px) {
+      #sidebar {
+        width: 100%;
+        position: absolute;
+        height: 50vh;
+        z-index: 1000;
+      }
+      
+      #map {
+        height: 50vh;
+        margin-top: 50vh;
+      }
+      
+      .directions-panel {
+        width: 90%;
+        right: 5%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="sidebar">
+      <div class="sidebar-header">
+        <h2>🏗️ Construction Hub</h2>
+      </div>
+      
+      <div class="controls">
+        <input type="text" class="search-box" id="searchBox" placeholder="Search companies or services...">
+        
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="residential">Residential</button>
+          <button class="filter-btn" data-filter="commercial">Commercial</button>
+          <button class="filter-btn" data-filter="infrastructure">Infrastructure</button>
+        </div>
+      </div>
+      
+      <div id="company-list">
+        <div class="loading">Loading companies...</div>
+      </div>
+    </div>
+    
+    <div id="map"></div>
+    
+    <div class="directions-panel" id="directionsPanel">
+      <div class="directions-header">
+        <h3>Directions</h3>
+        <button class="close-btn" onclick="closeDirections()">&times;</button>
+      </div>
+      <div class="directions-content" id="directionsContent">
+        <div class="loading">Calculating route...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-message" id="statusMessage"></div>
+
+  <script>
+    let map;
+    let userLocation;
+    let directionsService;
+    let directionsRenderer;
+    let placesService;
+    let markers = [];
+    let userMarker;
+    let currentFilter = 'all';
+
+    // Enhanced company data with more details
+    const companies = [
+      {
+        name: "SkyBuild Contractors",
+        type: "commercial",
+        location: { lat: 28.6139, lng: 77.2090 },
+        specialties: ["High-rise Construction", "Commercial Buildings", "Office Complexes"],
+        rating: 4.5,
+        reviews: 127,
+        phone: "+91-11-2345-6789",
+        website: "www.skybuild.com"
+      },
+      {
+        name: "MetroCon Pvt Ltd",
+        type: "infrastructure", 
+        location: { lat: 28.5355, lng: 77.3910 },
+        specialties: ["Metro Projects", "Bridges", "Tunnels", "Infrastructure"],
+        rating: 4.8,
+        reviews: 89,
+        phone: "+91-11-3456-7890",
+        website: "www.metrocon.in"
+      },
+      {
+        name: "UrbanFix Infra",
+        type: "residential",
+        location: { lat: 28.4595, lng: 77.0266 },
+        specialties: ["Residential Buildings", "Apartments", "Villas", "Home Renovation"],
+        rating: 4.2,
+        reviews: 156,
+        phone: "+91-11-4567-8901", 
+        website: "www.urbanfix.co.in"
+      },
+      {
+        name: "GreenBuild Solutions",
+        type: "residential",
+        location: { lat: 28.7041, lng: 77.1025 },
+        specialties: ["Eco-friendly Construction", "Green Buildings", "Solar Integration"],
+        rating: 4.6,
+        reviews: 78,
+        phone: "+91-11-5678-9012",
+        website: "www.greenbuild.in"
+      },
+      {
+        name: "MegaStructures Ltd",
+        type: "commercial",
+        location: { lat: 28.5244, lng: 77.1855 },
+        specialties: ["Shopping Malls", "Corporate Offices", "Industrial Buildings"],
+        rating: 4.4,
+        reviews: 203,
+        phone: "+91-11-6789-0123",
+        website: "www.megastructures.com"
+      },
+      {
+        name: "Heritage Builders",
+        type: "residential",
+        location: { lat: 28.6692, lng: 77.4538 },
+        specialties: ["Heritage Restoration", "Luxury Homes", "Custom Architecture"],
+        rating: 4.7,
+        reviews: 94,
+        phone: "+91-11-7890-1234",
+        website: "www.heritagebuilders.in"
+      },
+      {
+        name: "CityScape Developers",
+        type: "commercial",
+        location: { lat: 28.4089, lng: 77.3178 },
+        specialties: ["Urban Development", "Commercial Complexes", "Smart Cities"],
+        rating: 4.3,
+        reviews: 112,
+        phone: "+91-11-8901-2345",
+        website: "www.cityscape.com"
+      },
+      {
+        name: "Pinnacle Constructions",
+        type: "infrastructure",
+        location: { lat: 28.5355, lng: 77.3910 },
+        specialties: ["Roads and Highways", "Bridges", "Public Infrastructure"],
+        rating: 4.9,
+        reviews: 65,
+        phone: "+91-11-9012-3456",
+        website: "www.pinnacleconstructions.in"
+      },
+      {
+        name: "Elite Homes",
+        type: "residential",
+        location: { lat: 28.7041, lng: 77.1025 },
+        specialties: ["Luxury Villas", "Custom Homes", "Interior Design"],
+        rating: 4.8,
+        reviews: 120,
+        phone: "+91-11-0123-4567",
+        website: "www.elitehomes.co.in"
+      },
+      {
+        name: "FutureTech Builders",
+        type: "commercial",
+        location: { lat: 28.6139, lng: 77.2090 },
+        specialties: ["Smart Buildings", "Tech Parks", "Sustainable Construction"],
+        rating: 4.5,
+        reviews: 88,
+        phone: "+91-11-1234-5678",
+        website: "www.futuretechbuilders.com"
+      },
+      {
+        name: "UrbanNest Constructions",
+        type: "residential",
+        location: { lat: 28.4595, lng: 77.0266 },
+        specialties: ["Affordable Housing", "Community Projects", "Residential Complexes"],
+        rating: 4.1,
+        reviews: 150,
+        phone: "+91-11-2345-6789",
+        website: "www.urbannest.in"
+      },
+      {
+        name: "Skyline Developers",
+        type: "commercial",
+        location: { lat: 28.6692, lng: 77.4538 },
+        specialties: ["High-rise Buildings", "Commercial Spaces", "Urban Planning"],
+        rating: 4.6,
+        reviews: 102,
+        phone: "+91-11-3456-7890",
+        website: "www.skylinedevelopers.com"
+      },
+      {
+        name: "GreenField Constructions",
+        type: "infrastructure",
+        location: { lat: 28.4089, lng: 77.3178 },
+        specialties: ["Public Parks", "Community Infrastructure", "Sustainable Projects"],
+        rating: 4.4,
+        reviews: 75,
+        phone: "+91-11-4567-8901",
+        website: "www.greenfieldconstructions.in"
+      },
+      {
+        name: "UrbanRise Builders",
+        type: "residential",
+        location: { lat: 28.5244, lng: 77.1855 },
+        specialties: ["Residential Towers", "Luxury Apartments", "Smart Homes"],
+        rating: 4.7,
+        reviews: 110,
+        phone: "+91-11-5678-9012",
+        website: "www.urbanrisebuilders.com"
+      },
+      {
+        name: "MetroBuild Group",
+        type: "infrastructure",
+        location: { lat: 28.5355, lng: 77.3910 },
+        specialties: ["Metro Rail Projects", "Infrastructure Development", "Urban Transport"],
+        rating: 4.8,
+        reviews: 95,
+        phone: "+91-11-6789-0123",
+        website: "www.metrobuildgroup.in"
+      },
+      {
+        name: "Heritage Homes",
+        type: "residential",
+        location: { lat: 28.7041, lng: 77.1025 },
+        specialties: ["Heritage Homes", "Luxury Villas", "Custom Designs"],
+        rating: 4.9,
+        reviews: 80,
+        phone: "+91-11-7890-1234",
+        website: "www.heritagehomes.co.in"
+      },
+      {
+        name: "CityBuilders",
+        type: "commercial",
+        location: { lat: 28.6139, lng: 77.2090 },
+        specialties: ["Commercial Complexes", "Office Spaces", "Retail Developments"],
+        rating: 4.3,
+        reviews: 130,
+        phone: "+91-11-8901-2345",
+        website: "www.citybuilders.com"
+      },
+      {
+        name: "FutureBuilders",
+        type: "infrastructure",
+        location: { lat: 28.4595, lng: 77.0266 },
+        specialties: ["Smart Cities", "Public Infrastructure", "Sustainable Projects"],
+        rating: 4.5,
+        reviews: 70,
+        phone: "+91-11-9012-3456",
+        website: "www.futurebuilders.in"
+      },
+      {
+        name: "UrbanEdge Constructions",
+        type: "residential",
+        location: { lat: 28.6692, lng: 77.4538 },
+        specialties: ["Residential Complexes", "Affordable Housing", "Community Projects"],
+        rating: 4.2,
+        reviews: 140,
+        phone: "+91-11-0123-4567",
+        website: "www.urbanedge.in"
+      },
+      {
+        name: "SkyHigh Constructions",
+        type: "commercial",
+        location: { lat: 28.4089, lng: 77.3178 },
+        specialties: ["High-rise Buildings", "Commercial Spaces", "Urban Development"],
+        rating: 4.6,
+        reviews: 115,
+        phone: "+91-11-1234-5678",
+        website: "www.skyhighconstructions.com"
+      },
+      {
+      name: "AM National Construction",
+      lat: 18.506751,
+      lng: 73.856992,
+      address: "Kothrud, Pune",
+      image: "https://via.placeholder.com/250x120?text=AM+National+Construction"
+    },
+    {
+      name: "Jitendra Singh Group",
+      lat: 18.497561,
+      lng: 73.869102,
+      address: "Erandwane, Pune",
+      image: "https://via.placeholder.com/250x120?text=Jitendra+Singh+Group"
+    },
+    {
+      name: "Bharat Construction",
+      lat: 18.494237,
+      lng: 73.879522,
+      address: "Market Yard, Pune",
+      image: "https://via.placeholder.com/250x120?text=Bharat+Construction"
+    },
+    {
+      name: "Sahu Construction",
+      lat: 18.508876,
+      lng: 73.875321,
+      address: "Swargate, Pune",
+      image: "https://via.placeholder.com/250x120?text=Sahu+Construction"
+    }
+    ];
+
+    let nearbyPlaces = [];
+
+    function initMap() {
+      // Initialize map centered on Delhi
+      map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 11,
+        center: { lat: 28.6139, lng: 77.2090 },
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+          }
+        ]
+      });
+
+      directionsService = new google.maps.DirectionsService();
+      directionsRenderer = new google.maps.DirectionsRenderer({
+        suppressMarkers: true,
+        polylineOptions: {
+          strokeColor: "#667eea",
+          strokeWeight: 5
+        }
+      });
+      directionsRenderer.setMap(map);
+
+      placesService = new google.maps.places.PlacesService(map);
+
+      getUserLocation();
+      createCompanyMarkers();
+      setupEventListeners();
+      displayCompanies();
+      findNearbyConstructionPlaces();
+    }
+
+    function getUserLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            userLocation = {
+              lat: position.coords.latitude,
+              lng: position.coords.longitude
+            };
+            
+            userMarker = new google.maps.Marker({
+              position: userLocation,
+              map: map,
+              title: "Your Location",
+              icon: {
+                url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234285f4'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Ccircle cx='12' cy='12' r='4' fill='white'/%3E%3C/svg%3E",
+                scaledSize: new google.maps.Size(24, 24),
+                anchor: new google.maps.Point(12, 12)
+              },
+              zIndex: 1000
+            });
+
+            map.setCenter(userLocation);
+            calculateDistances();
+            showStatus("Location found! Calculating distances...", false);
+          },
+          (error) => {
+            console.error("Geolocation error:", error);
+            showStatus("Could not get your location. Using default location.", true);
+            // Use a default location (Delhi center)
+            userLocation = { lat: 28.6139, lng: 77.2090 };
+          }
+        );
+      } else {
+        showStatus("Geolocation not supported by this browser.", true);
+        userLocation = { lat: 28.6139, lng: 77.2090 };
+      }
+    }
+
+    function createCompanyMarkers() {
+      companies.forEach((company, index) => {
+        const marker = new google.maps.Marker({
+          position: company.location,
+          map: map,
+          title: company.name,
+          icon: {
+            url: getMarkerIcon(company.type),
+            scaledSize: new google.maps.Size(32, 32),
+            anchor: new google.maps.Point(16, 32)
+          }
+        });
+
+        const infoWindow = new google.maps.InfoWindow();
+
+        marker.addListener("click", () => {
+          const content = createInfoWindowContent(company);
+          infoWindow.setContent(content);
+          infoWindow.open(map, marker);
+        });
+
+        markers.push({ marker, company, infoWindow });
+      });
+    }
+
+    function getMarkerIcon(type) {
+      const icons = {
+        residential: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2328a745'%3E%3Cpath d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/%3E%3C/svg%3E",
+        commercial: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23007bff'%3E%3Cpath d='M12 2l3 3h4v14H5V5h4l3-3z'/%3E%3C/svg%3E",
+        infrastructure: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23dc3545'%3E%3Cpath d='M13 1v6h2.5L12 13.5 8.5 7H11V1h2zM4.26 11H1.5v2h2.76l.74 2H2.5v2h2.76l1 2H8v-2H4.5L3 13h18l-1.5 4H16v2h1.74l1-2H21v-2h-2.5l.74-2H22v-2h-2.76L18 9H6l-1.74 2z'/%3E%3C/svg%3E"
+      };
+      return icons[type] || icons.commercial;
+    }
+
+    function createInfoWindowContent(company) {
+      const distance = company.distance ? `${company.distance.toFixed(1)} km away` : '';
+      
+      return `
+        <div style="max-width: 280px; font-family: 'Segoe UI', sans-serif;">
+          <div style="margin-bottom: 10px;">
+            <h3 style="margin: 0 0 5px 0; color: #2c3e50;">${company.name}</h3>
+            <div style="font-size: 12px; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px;">${company.type}</div>
+          </div>
+          
+          <div style="margin-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 5px;">
+              <span style="color: #ffc107;">★★★★★</span>
+              <span style="font-size: 14px; color: #6c757d;">${company.rating} (${company.reviews} reviews)</span>
+            </div>
+            ${distance ? `<div style="font-size: 12px; color: #28a745; font-weight: 600;">${distance}</div>` : ''}
+          </div>
+          
+          <div style="margin-bottom: 15px;">
+            <div style="font-weight: 600; margin-bottom: 5px; color: #2c3e50;">Specialties:</div>
+            <div style="font-size: 13px; color: #495057; line-height: 1.4;">
+              ${company.specialties.join(' • ')}
+            </div>
+          </div>
+          
+          <div style="display: flex; gap: 8px;">
+            <button onclick="getDirections(${company.location.lat}, ${company.location.lng}, '${company.name}')" 
+                    style="flex: 1; padding: 8px 12px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+              Get Directions
+            </button>
+            <button onclick="window.open('tel:${company.phone}')" 
+                    style="flex: 1; padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">
+              Call Now
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function findNearbyConstructionPlaces() {
+      if (!userLocation) return;
+
+      const request = {
+        location: userLocation,
+        radius: 10000, // 10km radius
+        type: 'establishment',
+        keyword: 'construction hardware building materials'
+      };
+
+      placesService.nearbySearch(request, (results, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          nearbyPlaces = results.slice(0, 10); // Limit to 10 places
+          
+          nearbyPlaces.forEach(place => {
+            const marker = new google.maps.Marker({
+              position: place.geometry.location,
+              map: map,
+              title: place.name,
+              icon: {
+                url: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff9800'%3E%3Cpath d='M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'/%3E%3C/svg%3E",
+                scaledSize: new google.maps.Size(24, 24),
+                anchor: new google.maps.Point(12, 24)
+              }
+            });
+
+            const infoWindow = new google.maps.InfoWindow();
+            marker.addListener("click", () => {
+              const content = `
+                <div style="max-width: 250px;">
+                  <h4 style="margin: 0 0 8px 0;">${place.name}</h4>
+                  <div style="font-size: 13px; color: #6c757d; margin-bottom: 8px;">${place.vicinity}</div>
+                  <div style="display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
+                    <span style="color: #ffc107;">★</span>
+                    <span style="font-size: 14px;">${place.rating || 'N/A'}</span>
+                  </div>
+                  <button onclick="getDirections(${place.geometry.location.lat()}, ${place.geometry.location.lng()}, '${place.name}')" 
+                          style="padding: 6px 12px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                    Get Directions
+                  </button>
+                </div>
+              `;
+              infoWindow.setContent(content);
+              infoWindow.open(map, marker);
+            });
+          });
+          
+          console.log(`Found ${nearbyPlaces.length} nearby places`);
+        }
+      });
+    }
+
+    function calculateDistances() {
+      if (!userLocation) return;
+
+      companies.forEach(company => {
+        const distance = google.maps.geometry.spherical.computeDistanceBetween(
+          new google.maps.LatLng(userLocation.lat, userLocation.lng),
+          new google.maps.LatLng(company.location.lat, company.location.lng)
+        ) / 1000; // Convert to km
+        
+        company.distance = distance;
+      });
+
+      // Sort by distance
+      companies.sort((a, b) => (a.distance || 0) - (b.distance || 0));
+      displayCompanies();
+    }
+
+    function displayCompanies() {
+      const companyList = document.getElementById("company-list");
+      const filteredCompanies = companies.filter(company => 
+        currentFilter === 'all' || company.type === currentFilter
+      );
+
+      companyList.innerHTML = filteredCompanies.map(company => `
+        <div class="company-card" onclick="focusOnCompany(${companies.indexOf(company)})">
+          <div class="company-header">
+            <div class="company-name">${company.name}</div>
+            <div class="company-type">${company.type}</div>
+          </div>
+          
+          <div class="company-details">
+            <div class="company-rating">
+              <span class="stars">★★★★★</span>
+              <span class="rating-text">${company.rating} (${company.reviews})</span>
+            </div>
+            
+            ${company.distance ? `<div class="company-distance">${company.distance.toFixed(1)} km away</div>` : ''}
+            
+            <div style="font-size: 13px; color: #495057; margin: 8px 0;">
+              ${company.specialties.slice(0, 2).join(' • ')}
+            </div>
+            
+            <div class="action-buttons">
+              <button class="btn btn-primary" onclick="event.stopPropagation(); getDirections(${company.location.lat}, ${company.location.lng}, '${company.name}')">
+                Directions
+              </button>
+              <button class="btn btn-outline" onclick="event.stopPropagation(); window.open('tel:${company.phone}')">
+                Call
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function focusOnCompany(index) {
+      const company = companies[index];
+      map.panTo(company.location);
+      map.setZoom(15);
+      
+      const marker = markers.find(m => m.company === company);
+      if (marker) {
+        google.maps.event.trigger(marker.marker, "click");
+      }
+    }
+
+    function getDirections(lat, lng, destinationName) {
+      if (!userLocation) {
+        showStatus("Your location is not available. Please enable location access.", true);
+        return;
+      }
+
+      const destination = { lat, lng };
+      
+      document.getElementById("directionsPanel").style.display = "block";
+      document.getElementById("directionsContent").innerHTML = '<div class="loading">Calculating route...</div>';
+
+      const request = {
+        origin: userLocation,
+        destination: destination,
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.METRIC,
+        avoidHighways: false,
+        avoidTolls: false
+      };
+
+      directionsService.route(request, (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          directionsRenderer.setDirections(result);
+          displayDirectionsInfo(result, destinationName);
+          showStatus("Route calculated successfully!", false);
+        } else {
+          console.error("Directions request failed:", status);
+          document.getElementById("directionsContent").innerHTML = `
+            <div style="text-align: center; padding: 20px; color: #dc3545;">
+              <h4>Could not calculate route</h4>
+              <p>Error: ${status}</p>
+              <button class="btn btn-primary" onclick="retryDirections(${lat}, ${lng}, '${destinationName}')">
+                Try Again
+              </button>
+            </div>
+          `;
+          showStatus("Failed to calculate route. Please try again.", true);
+        }
+      });
+    }
+
+    function displayDirectionsInfo(result, destinationName) {
+      const route = result.routes[0];
+      const leg = route.legs[0];
+      
+      const content = `
+        <div class="route-info">
+          <h4 style="margin: 0 0 10px 0; color: #2c3e50;">Route to ${destinationName}</h4>
+          <div class="route-summary">
+            <span class="distance">${leg.distance.text}</span>
+            <span class="duration">${leg.duration.text}</span>
+          </div>
+          <div class="travel-mode">Driving</div>
+        </div>
+        
+        <div class="directions-steps">
+          <h5 style="margin: 0 0 10px 0; color: #2c3e50;">Step-by-step directions:</h5>
+          ${leg.steps.map((step, index) => `
+            <div class="step">
+              <strong>${index + 1}.</strong> ${step.instructions.replace(/<[^>]*>/g, '')}
+              <div style="font-size: 12px; color: #6c757d; margin-top: 2px;">
+                ${step.distance.text} • ${step.duration.text}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        
+        <div style="margin-top: 15px; text-align: center;">
+          <button class="btn btn-primary" onclick="openInGoogleMaps(${result.routes[0].legs[0].end_location.lat()}, ${result.routes[0].legs[0].end_location.lng()})">
+            Open in Google Maps
+          </button>
+        </div>
+      `;
+      
+      document.getElementById("directionsContent").innerHTML = content;
+    }
+
+    function openInGoogleMaps(lat, lng) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+      window.open(url, '_blank');
+    }
+
+    function retryDirections(lat, lng, destinationName) {
+      getDirections(lat, lng, destinationName);
+    }
+
+    function closeDirections() {
+      document.getElementById("directionsPanel").style.display = "none";
+      directionsRenderer.setDirections({routes: []});
+    }
+
+    function setupEventListeners() {
+      // Search functionality
+      const searchBox = document.getElementById("searchBox");
+      searchBox.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const companyCards = document.querySelectorAll('.company-card');
+        
+        companyCards.forEach((card, index) => {
+          const company = companies[index];
+          const isVisible = searchTerm === '' || 
+            company.name.toLowerCase().includes(searchTerm) ||
+            company.specialties.some(s => s.toLowerCase().includes(searchTerm)) ||
+            company.type.toLowerCase().includes(searchTerm);
+          
+          card.style.display = isVisible ? 'block' : 'none';
+        });
+      });
+
+      // Filter buttons
+      const filterButtons = document.querySelectorAll('.filter-btn');
+      filterButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          filterButtons.forEach(b => b.classList.remove('active'));
+          e.target.classList.add('active');
+          currentFilter = e.target.dataset.filter;
+          displayCompanies();
+        });
+      });
+    }
+
+    function showStatus(message, isError = false) {
+      const statusMessage = document.getElementById('statusMessage');
+      statusMessage.textContent = message;
+      statusMessage.className = isError ? 'status-message error' : 'status-message';
+      statusMessage.style.display = 'block';
+      
+      setTimeout(() => {
+        statusMessage.style.display = 'none';
+      }, 3000);
+    }
+
+    // Initialize map when page loads
+    window.initMap = initMap;
+  </script>
+
+  <!-- Replace YOUR_GOOGLE_MAPS_API_KEY with your actual API key on this line -->
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBpdRzYsQBm2oiayVrixZnuoo5QTZbdBAU&libraries=places,geometry&callback=initMap">
+  </script>
+</body>
+</html>
+
