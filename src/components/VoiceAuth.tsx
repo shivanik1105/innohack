@@ -60,7 +60,7 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
       setStep(step === 'enroll_prompt' ? 'enroll_recording' : 'login_recording');
     } catch (err) {
       console.error("Microphone access denied:", err);
-      setError(t('micAccessDenied'));
+      setError(t('voiceAuth.micAccessDenied'));
       setStep('error');
     }
   };
@@ -95,7 +95,7 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
     if (isVerified) {
       onLoginSuccess('fake-verification-token');
     } else {
-      setError(t('voiceMatchFail'));
+      setError(t('voiceAuth.voiceMatchFail'));
       setStep('error');
     }
   };
@@ -106,14 +106,14 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
         return (
           <>
             <h3 className="text-2xl font-bold text-center mb-2">{t('welcome')}</h3>
-            <p className="text-center text-gray-600 mb-8">{t('enterPhoneToStart')}</p>
+            <p className="text-center text-gray-600 mb-8">{t('voiceAuth.enterPhoneToStart')}</p>
             <div className="relative">
               <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
               <input
                 type="tel"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder={t('enterPhoneNumber')}
+                placeholder={t('voiceAuth.enterPhoneNumber')}
                 className="w-full pl-14 pr-4 py-4 text-lg border-2 border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -128,9 +128,9 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
         const isEnrolling = step === 'enroll_prompt';
         return (
           <div className="text-center flex flex-col items-center">
-            <h3 className="text-2xl font-bold mb-2">{isEnrolling ? t('createVoicePassword') : t('speakToLogin')}</h3>
-            <p className="text-gray-600 mb-8">{t('pressAndHoldMic')}</p>
-            <p className="text-lg font-semibold bg-gray-100 px-4 py-2 rounded-lg mb-8">"{t('voiceAuthPhrase')}"</p>
+            <h3 className="text-2xl font-bold mb-2">{isEnrolling ? t('voiceAuth.createVoicePassword') : t('voiceAuth.speakToLogin')}</h3>
+            <p className="text-gray-600 mb-8">{t('voiceAuth.pressAndHoldMic')}</p>
+            <p className="text-lg font-semibold bg-gray-100 px-4 py-2 rounded-lg mb-8">"{t('voiceAuth.voiceAuthPhrase')}"</p>
             <button
               onMouseDown={startRecording}
               onMouseUp={stopRecording}
@@ -147,9 +147,9 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
       case 'login_recording':
         return (
           <div className="text-center flex flex-col items-center">
-            <h3 className="text-2xl font-bold mb-2">{t('recording')}</h3>
-            <p className="text-gray-600 mb-8">{t('releaseToStop')}</p>
-            <p className="text-lg font-semibold bg-gray-100 px-4 py-2 rounded-lg mb-8">"{t('voiceAuthPhrase')}"</p>
+            <h3 className="text-2xl font-bold mb-2">{t('voiceAuth.recording')}</h3>
+            <p className="text-gray-600 mb-8">{t('voiceAuth.releaseToStop')}</p>
+            <p className="text-lg font-semibold bg-gray-100 px-4 py-2 rounded-lg mb-8">"{t('voiceAuth.voiceAuthPhrase')}"</p>
             <button className="w-24 h-24 bg-red-600 rounded-full flex items-center justify-center text-white shadow-lg animate-pulse">
               <Mic size={48} />
             </button>
@@ -160,7 +160,7 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
         return (
           <div className="text-center flex flex-col items-center">
             <Loader className="w-16 h-16 text-blue-500 animate-spin mb-4" />
-            <h3 className="text-2xl font-bold">{t('verifyingVoice')}</h3>
+            <h3 className="text-2xl font-bold">{t('voiceAuth.verifyingVoice')}</h3>
           </div>
         );
 
@@ -168,10 +168,10 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
         return (
           <div className="text-center flex flex-col items-center">
             <ShieldAlert className="w-16 h-16 text-red-500 mb-4" />
-            <h3 className="text-2xl font-bold mb-2">{t('errorOccurred')}</h3>
+            <h3 className="text-2xl font-bold mb-2">{t('voiceAuth.errorOccurred')}</h3>
             <p className="text-gray-600 mb-8">{error}</p>
             <button onClick={() => setStep('phone')} className="w-full mt-4 bg-gray-600 text-white font-bold py-4 rounded-xl text-lg hover:bg-gray-700">
-              {t('tryAgain')}
+              {t('voiceAuth.tryAgain')}
             </button>
           </div>
         );
@@ -187,29 +187,3 @@ export default function VoiceAuth({ onLoginSuccess, className = '' }: VoiceAuthP
     </div>
   );
 }
-
-```
-
-### How to Use It
-
-You would replace your existing authentication components with this new `VoiceAuth` component. You'll also need to add the following translation keys to your language files:
-
-*   `welcome`: "Welcome!"
-*   `enterPhoneToStart`: "Please enter your phone number to begin."
-*   `createVoicePassword`: "Create Your Voice Password"
-*   `speakToLogin`: "Speak to Log In"
-*   `pressAndHoldMic`: "Press and hold the button and say:"
-*   `voiceAuthPhrase`: "My voice is my password"
-*   `recording`: "Recording..."
-*   `releaseToStop`: "Release the button to stop."
-*   `verifyingVoice`: "Verifying your voice..."
-*   `errorOccurred`: "An Error Occurred"
-*   `micAccessDenied`: "Microphone access was denied. Please enable it in your browser settings."
-*   `voiceMatchFail`: "Your voice did not match. Please try again."
-*   `tryAgain`: "Try Again"
-
-This component provides a complete, user-friendly flow for voice authentication. The next critical step is to build the backend and integrate a speaker verification service to handle the actual voice analysis.
-
-<!--
-[PROMPT_SUGGESTION]How do I set up a simple backend endpoint to receive the audio file?[/PROMPT_SUGGESTION]
-[PROMPT_SUGGESTION]Can you add a visualizer to show the microphone is picking up audio?[/PROMPT_SUGGESTION]
