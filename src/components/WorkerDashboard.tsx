@@ -1,16 +1,14 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-import { 
-  User, MapPin, Award, ToggleRight, ToggleLeft, Phone, Calendar, 
-  Star, Upload, FileText, CreditCard, LogOut ,
-  DollarSign, 
-  Camera,
-=======
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   MapPin,
+  Award,
   Phone,
+  Star,
+  DollarSign,
+  Camera,
+  Upload,
+  FileText,
   Calendar,
   User,
   ToggleLeft,
@@ -20,26 +18,24 @@ import {
   Briefcase,
   Bell,
   Settings,
-  LogOut
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
+  LogOut,
+  Search,
+  X,
+  Filter,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Worker, Job } from '../types/worker';
 import LocationSelector from './LocationSelector';
 import { useLanguage } from '../hooks/useLanguage';
-import { TranslationKey } from '/Users/janhvi/innohack1/innohack/src/utils/translations.ts';
-import { Search } from 'lucide-react';
-import { X } from 'lucide-react';
-import { Filter } from 'lucide-react';
-import { ChevronDown } from 'lucide-react';
-import { ChevronRight } from 'lucide-react';
+import { TranslationKey } from '../utils/translations';
 import { useTranslation } from 'react-i18next';
-
 
 interface WorkerDashboardProps {
   worker: Worker;
   onUpdateWorker: (worker: Worker) => void;
-  initialLanguage?: string; 
+  initialLanguage?: string;
   language: 'en' | 'hi' | 'mr';
 }
 
@@ -94,10 +90,23 @@ const mockJobs: Job[] = [
   }
 ];
 
-export default function EnhancedWorkerDashboard({ worker: propWorker, onUpdateWorker }: WorkerDashboardProps) {
+type SidebarLabel = 'jobs' | 'profile' | 'payments' | 'notifications' | 'settings' | 'logout' | 'allJobs';
+
+interface SidebarItem {
+  icon: React.ReactNode;
+  label: SidebarLabel;
+  active?: boolean;
+  notification?: number;
+}
+
+export default function WorkerDashboard({ 
+  worker: propWorker, 
+  onUpdateWorker,
+  language: propLanguage = 'en'
+}: WorkerDashboardProps) {
   const location = useLocation();
-    const { t, i18n } = useTranslation();
-  const [language, setLanguage] = useState<string>('en');
+  const { t, i18n } = useTranslation();
+  const [language, setLanguage] = useState<string>(propLanguage);
   const [activeTab, setActiveTab] = useState<'jobs' | 'profile' | 'payments'>('jobs');
   const [showLocationSelector, setShowLocationSelector] = useState(false);
   const [locationFilter, setLocationFilter] = useState<'nearby' | 'all'>('nearby');
@@ -108,40 +117,24 @@ export default function EnhancedWorkerDashboard({ worker: propWorker, onUpdateWo
   const [expandedJobId, setExpandedJobId] = useState<string | null>(null);
   const [selectedJobType, setSelectedJobType] = useState<string>('all');
 
-  type SidebarLabel = 'jobs' | 'profile' | 'payments' | 'notifications' | 'settings' | 'logout' | 'allJobs';
-     useEffect(() => {
-      const storedLang = localStorage.getItem('appLanguage');
-      if (storedLang === 'hi' || storedLang === 'mr' || storedLang === 'en') {
-        i18n.changeLanguage(storedLang); // ✅ Works now
-        setLanguage(storedLang);
-      }
-    }, []); // ✅ Remove i18n from dependency array
-  
-
-const [worker, setWorker] = useState<Worker | null>(() => {
+  const [worker, setWorker] = useState<Worker | null>(() => {
     const workerData = propWorker || location.state?.worker;
     if (workerData) {
       return {
         ...workerData,
-        language: workerData.language || 'mr' 
+        language: workerData.language || 'mr'
       };
     }
     return null;
   });
 
-  interface WorkerDashboardProps {
-    worker: Worker;
-    onUpdateWorker: (worker: Worker) => void;
-    initialLanguage?: string;
-  }
-  
-  
-  interface SidebarItem {
-    icon: React.ReactNode;
-    label: SidebarLabel;
-    active?: boolean;
-    notification?: number;
-  }
+  useEffect(() => {
+    const storedLang = localStorage.getItem('appLanguage');
+    if (storedLang === 'hi' || storedLang === 'mr' || storedLang === 'en') {
+      i18n.changeLanguage(storedLang);
+      setLanguage(storedLang);
+    }
+  }, [i18n]);
 
   const translateJobType = (type: string) => {
     if (validJobTypes.includes(type as JobType)) {
@@ -157,13 +150,14 @@ const [worker, setWorker] = useState<Worker | null>(() => {
     }
   };
 
-const toggleAvailability = () => {
-  if (!worker) return;
-  handleUpdateWorker({ 
-    ...worker, 
-    isAvailableToday: !worker.isAvailableToday 
-  });
-};
+  const toggleAvailability = () => {
+    if (!worker) return;
+    handleUpdateWorker({
+      ...worker,
+      isAvailableToday: !worker.isAvailableToday
+    });
+  };
+
   const toggleJobExpansion = (jobId: string) => {
     setExpandedJobId(expandedJobId === jobId ? null : jobId);
   };
@@ -186,9 +180,9 @@ const toggleAvailability = () => {
     return (
       (locationFilter === 'nearby'
         ? matchesJobType &&
-          worker?.pinCode &&
+          worker?.pincode &&
           job?.pinCode &&
-          job.pinCode.startsWith(worker.pinCode.slice(0, 3))
+          job.pinCode.startsWith(worker.pincode.slice(0, 3))
         : matchesJobType) && matchesSearch
     );
   });
@@ -202,142 +196,11 @@ const toggleAvailability = () => {
     setShowLocationSelector(false);
   };
 
-<<<<<<< HEAD
   const handleLogout = () => {
     localStorage.clear();
     window.location.reload();
   };
 
-  const filteredJobs = mockJobs.filter(job => {
-    const matchesJobType = worker.jobTypes.includes(job.jobType);
-    
-    if (locationFilter === 'nearby') {
-      // Show jobs within same pin code area (first 3 digits)
-      return matchesJobType && job.pinCode.startsWith(worker.pinCode.slice(0, 3));
-    } else {
-      // Show all jobs in the city/state
-      return matchesJobType;
-    }
-  });
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-              {worker.photo ? (
-                <img src={worker.photo} alt="Profile" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <User className="w-8 h-8" />
-              )}
-            </div>
-            <div className="flex-1">
-              <h1 className="text-2xl font-bold">{worker.name}</h1>
-              <p className="opacity-90">{worker.phoneNumber}</p>
-              <div className="flex items-center space-x-2 mt-1">
-                <MapPin className="w-4 h-4" />
-                <span>{worker.pinCode}</span>
-                
-                {worker.verificationStatus === 'verified' && (
-                  <div className="bg-green-500 px-2 py-1 rounded-full text-xs flex items-center">
-                    <Award className="w-3 h-3 mr-1" />
-                    {t('verified')}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-4">
-            <div className="flex flex-col items-center">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="text-sm font-medium">Logout</span>
-                <button
-                  onClick={toggleAvailability}
-                  className="flex items-center"
-                >
-                  {worker.isAvailableToday ? (
-                    <ToggleRight className="w-8 h-8 text-green-300" />
-                  ) : (
-                    <ToggleLeft className="w-8 h-8 text-gray-300" />
-                  )}
-                </button>
-              </div>
-              <span className="text-xs">
-                {worker.isAvailableToday ? t('available') : t('busy')}
-              </span>
-            </div>
-            
-            <button
-              onClick={handleLogout}
-              className="flex flex-col items-center space-y-1 p-2 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              <LogOut className="w-6 h-6" />
-              <span className="text-xs">लॉगआउट</span>
-            </button>
-          </div>
-
-        <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-            {worker.photo ? (
-              <img src={worker.photo} alt="Profile" className="w-full h-full rounded-full object-cover" />
-            ) : (
-              <User className="w-8 h-8" />
-            )}
-          </div>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">{worker.name}</h1>
-            <p className="opacity-90">{worker.phoneNumber}</p>
-            <div className="flex items-center space-x-2 mt-1">
-              <MapPin className="w-4 h-4" />
-              <span>{worker.pinCode}</span>
-              {worker.verificationStatus === 'verified' && (
-                <div className="bg-green-500 px-2 py-1 rounded-full text-xs flex items-center">
-                  <Award className="w-3 h-3 mr-1" />
-                  {t('verified')}
-                </div>
-              )}
-            </div>
-          </div>
-          <button
-            onClick={toggleAvailability}
-            className="flex flex-col items-center space-y-1"
-          >
-            {worker.isAvailableToday ? (
-              <ToggleRight className="w-8 h-8 text-green-300" />
-            ) : (
-              <ToggleLeft className="w-8 h-8 text-gray-300" />
-            )}
-            <span className="text-xs">
-              {worker.isAvailableToday ? t('available') : t('busy')}
-            </span>
-          </button>
-=======
-if (!worker) {
-  return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <div className="text-center p-6 bg-white rounded-xl shadow-md max-w-md w-full">
-        <div className="text-red-500 mb-4">
-          <X size={48} className="mx-auto" />
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
-        </div>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">{t('workerDataNotFound')}</h2>
-        <p className="text-gray-600 mb-4">{t('registerAgainMessage')}</p>
-        <button 
-          onClick={() => window.location.href = '/register'}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          {t('registerNow')}
-        </button>
-      </div>
-    </div>
-  );
-}
-<<<<<<< HEAD
-}
-=======
   const sidebarItems: SidebarItem[] = [
     { icon: <Home size={20} />, label: 'jobs', active: activeTab === 'jobs' },
     { icon: <User size={20} />, label: 'profile', active: activeTab === 'profile' },
@@ -347,12 +210,33 @@ if (!worker) {
     { icon: <LogOut size={20} />, label: 'logout' }
   ];
 
+  // Early return if worker is null
+  if (!worker) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+        <div className="text-center p-6 bg-white rounded-xl shadow-md max-w-md w-full">
+          <div className="text-red-500 mb-4">
+            <X size={48} className="mx-auto" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">{t('workerDataNotFound')}</h2>
+          <p className="text-gray-600 mb-4">{t('registerAgainMessage')}</p>
+          <button
+            onClick={() => window.location.href = '/register'}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {t('registerNow')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Sidebar */}
       <AnimatePresence>
         {sidebarOpen && (
-          <motion.div 
+          <motion.div
             initial={{ x: -300, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: -300, opacity: 0 }}
@@ -365,7 +249,7 @@ if (!worker) {
                 <h1 className="text-xl font-bold tracking-tight">WorkerConnect</h1>
               </div>
               {isMobile && (
-                <button 
+                <button
                   onClick={() => setSidebarOpen(false)}
                   className="text-white hover:text-amber-200 transition-colors"
                 >
@@ -373,12 +257,12 @@ if (!worker) {
                 </button>
               )}
             </div>
-            
+
             <div className="p-5">
               <div className="flex items-center space-x-4 mb-6 p-4 bg-indigo-600 rounded-xl shadow-md">
                 <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-md">
-                  {worker.photo ? (
-                    <img src={worker.photo} alt="Profile" className="w-full h-full object-cover" />
+                  {worker.profilePhotoUrl ? (
+                    <img src={worker.profilePhotoUrl} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <div className="flex items-center justify-center h-full bg-indigo-500">
                       <User className="w-6 h-6 text-white" />
@@ -388,45 +272,47 @@ if (!worker) {
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium truncate">{worker.name}</h3>
                   <p className="text-xs text-indigo-100 truncate">
-                    {worker.jobTypes.map(type => translateJobType(type)).join(', ')}
+                    {worker.dailyJobTypes.map(type => translateJobType(type)).join(', ')}
                   </p>
                 </div>
               </div>
-              
-            <nav className="space-y-2">
-              {sidebarItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={() => {
-                    if (['jobs', 'profile', 'payments'].includes(item.label)) {
-                      setActiveTab(item.label as 'jobs' | 'profile' | 'payments');
-                    }
-                    if (isMobile && item.label !== 'logout') {
-                      setSidebarOpen(false);
-                    }
-                  }}
-                  className={`flex items-center w-full p-3 rounded-lg transition-all ${
-                    item.active 
-                      ? 'bg-white text-indigo-700 shadow-md' 
-                      : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-50'
-                  }`}
-                >
-                  <span className={`mr-3 ${item.active ? 'text-indigo-600' : 'text-indigo-200'}`}>
-                    {item.icon}
-                  </span>
-                  <span className="font-medium">{t(`sidebar.${item.label}`)}</span>
-                  {item.notification !== undefined && (
-                    <span className="ml-auto bg-amber-400 text-indigo-900 text-xs font-bold px-2 py-0.5 rounded-full">
-                      {item.notification}
+
+              <nav className="space-y-2">
+                {sidebarItems.map((item) => (
+                  <button
+                    key={item.label}
+                    onClick={() => {
+                      if (['jobs', 'profile', 'payments'].includes(item.label)) {
+                        setActiveTab(item.label as 'jobs' | 'profile' | 'payments');
+                      }
+                      if (item.label === 'logout') {
+                        handleLogout();
+                      }
+                      if (isMobile && item.label !== 'logout') {
+                        setSidebarOpen(false);
+                      }
+                    }}
+                    className={`flex items-center w-full p-3 rounded-lg transition-all ${
+                      item.active
+                        ? 'bg-white text-indigo-700 shadow-md'
+                        : 'text-indigo-100 hover:bg-indigo-600 hover:bg-opacity-50'
+                    }`}
+                  >
+                    <span className={`mr-3 ${item.active ? 'text-indigo-600' : 'text-indigo-200'}`}>
+                      {item.icon}
                     </span>
-                  )}
-                </button>
-              ))}
-            </nav>
+                    <span className="font-medium">{t(`sidebar.${item.label}`)}</span>
+                    {item.notification !== undefined && (
+                      <span className="ml-auto bg-amber-400 text-indigo-900 text-xs font-bold px-2 py-0.5 rounded-full">
+                        {item.notification}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </nav>
             </div>
 
-            {/* Footer */}              
-            
+            {/* Footer */}
             <div className="absolute bottom-0 left-0 right-0 p-5 border-t border-indigo-600">
               <div className="flex items-center justify-between">
                 <div className="text-xs text-indigo-200">
@@ -439,11 +325,11 @@ if (!worker) {
       </AnimatePresence>
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all overflow-auto ${sidebarOpen && !isMobile ? 'ml-64' : ''}`}>
+      <div className={`flex-1 transition-all overflow-auto ${sidebarOpen && !isMobile ? 'ml-0' : ''}`}>
         {/* Mobile Header */}
         {isMobile && (
           <div className="bg-indigo-700 text-white p-4 flex justify-between items-center md:hidden shadow-md">
-            <button 
+            <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-1 rounded-md hover:bg-indigo-600 transition-colors"
             >
@@ -469,26 +355,26 @@ if (!worker) {
                 {t("welcome")}, <span className="text-indigo-600">{worker.name.split(' ')[0]}</span>!
               </h1>
               <p className="text-gray-600">
-                {activeTab === 'jobs' ? t('findJobsForYou') : 
-                 activeTab === 'profile' ? 'Manage your profile details' : 
+                {activeTab === 'jobs' ? t('findJobsForYou') :
+                 activeTab === 'profile' ? 'Manage your profile details' :
                  'View your payment history'}
               </p>
             </div>
-            
+
             <div className="flex items-center gap-3 w-full md:w-auto">
               {isMobile && (
-                <button 
+                <button
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                   className="p-2 rounded-lg bg-gray-100 text-gray-700 md:hidden"
                 >
                   ☰
                 </button>
               )}
-              <button 
-                onClick={toggleAvailability} 
+              <button
+                onClick={toggleAvailability}
                 className={`flex items-center px-4 py-2.5 rounded-full transition-all ${
-                  worker.isAvailableToday 
-                    ? 'bg-emerald-100 text-emerald-800 shadow-sm' 
+                  worker.isAvailableToday
+                    ? 'bg-emerald-100 text-emerald-800 shadow-sm'
                     : 'bg-gray-100 text-gray-600'
                 }`}
               >
@@ -514,8 +400,8 @@ if (!worker) {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={`px-5 py-2.5 rounded-lg font-medium transition-all ${
-                  activeTab === tab 
-                    ? 'bg-indigo-600 text-white shadow-md' 
+                  activeTab === tab
+                    ? 'bg-indigo-600 text-white shadow-md'
                     : 'bg-white text-gray-700 border hover:bg-gray-50'
                 }`}
               >
@@ -530,7 +416,7 @@ if (!worker) {
               <div>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                   <h2 className="text-xl font-semibold text-gray-800">{t('findJobsForYou')}</h2>
-                  
+
                   <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
                     <div className="relative flex-1">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
@@ -542,9 +428,9 @@ if (!worker) {
                         onChange={(e) => setSearchQuery(e.target.value)}
                       />
                     </div>
-                    
-                    <button 
-                      onClick={() => setShowLocationSelector(true)} 
+
+                    <button
+                      onClick={() => setShowLocationSelector(true)}
                       className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white border rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
                     >
                       <Filter size={16} />
@@ -581,21 +467,21 @@ if (!worker) {
 
                 <AnimatePresence>
                   {showLocationSelector && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 backdrop-blur-sm"
                     >
-                      <motion.div 
+                      <motion.div
                         initial={{ scale: 0.9, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
                         className="bg-white p-6 rounded-xl max-w-sm w-full mx-4 shadow-2xl"
                       >
                         <LocationSelector onLocationChoice={handleLocationChoice} />
-                        <button 
-                          onClick={() => setShowLocationSelector(false)} 
+                        <button
+                          onClick={() => setShowLocationSelector(false)}
                           className="mt-4 w-full text-center text-gray-600 hover:text-gray-800 transition-colors font-medium"
                         >
                           Cancel
@@ -607,14 +493,14 @@ if (!worker) {
 
                 {filteredJobs.length === 0 ? (
                   <div className="bg-white p-8 rounded-xl shadow-sm text-center border border-gray-100">
-                    <img 
-                      src="https://cdn-icons-png.flaticon.com/512/4076/4076478.png" 
-                      alt="No jobs found" 
+                    <img
+                      src="https://cdn-icons-png.flaticon.com/512/4076/4076478.png"
+                      alt="No jobs found"
                       className="w-32 h-32 mx-auto mb-4 opacity-70"
                     />
                     <h3 className="text-lg font-medium text-gray-700 mb-2">{t('noJobsFound')}</h3>
                     <p className="text-gray-500 mb-4">{t('tryChangingFilters')}</p>
-                    <button 
+                    <button
                       onClick={() => setLocationFilter(locationFilter === 'nearby' ? 'all' : 'nearby')}
                       className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
                     >
@@ -624,14 +510,14 @@ if (!worker) {
                 ) : (
                   <div className="grid gap-6">
                     {filteredJobs.map((job) => (
-                      <motion.div 
+                      <motion.div
                         key={job.id}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3 }}
                         className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden"
                       >
-                        <div 
+                        <div
                           className="p-5 cursor-pointer"
                           onClick={() => toggleJobExpansion(job.id)}
                         >
@@ -644,14 +530,14 @@ if (!worker) {
                               ₹{job.payPerDay}/day
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center justify-between mt-4">
                             <div className="flex items-center text-sm text-gray-500">
-                              <MapPin className="w-4 h-4 mr-1.5 text-indigo-600" /> 
+                              <MapPin className="w-4 h-4 mr-1.5 text-indigo-600" />
                               <span className="truncate max-w-[120px]">{job.location}</span>
                             </div>
                             <div className="flex items-center text-sm text-gray-500">
-                              <Calendar className="w-4 h-4 mr-1.5 text-indigo-600" /> 
+                              <Calendar className="w-4 h-4 mr-1.5 text-indigo-600" />
                               <span>{job.duration}</span>
                             </div>
                             <div className="flex items-center">
@@ -663,7 +549,7 @@ if (!worker) {
                             </div>
                           </div>
                         </div>
-                        
+
                         <AnimatePresence>
                           {expandedJobId === job.id && (
                             <motion.div
@@ -692,12 +578,12 @@ if (!worker) {
                                     <div className="font-medium text-gray-800">{job.pinCode}</div>
                                   </div>
                                 </div>
-                                
+
                                 <button
                                   onClick={() => handleCall(job.contactNumber)}
                                   className="w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-2.5 rounded-lg hover:from-emerald-600 hover:to-emerald-700 transition-all flex items-center justify-center shadow-md hover:shadow-lg font-medium"
                                 >
-                                  <Phone className="w-4 h-4 mr-2" /> 
+                                  <Phone className="w-4 h-4 mr-2" />
                                   <span>{t('callNow')}</span>
                                 </button>
                               </div>
@@ -712,14 +598,14 @@ if (!worker) {
             )}
 
             {activeTab === 'profile' && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="space-y-6"
               >
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
-                    <User className="mr-2 text-indigo-600" size={20} /> 
+                    <User className="mr-2 text-indigo-600" size={20} />
                     {t('personalInfo')}
                   </h3>
                   <div className="grid md:grid-cols-2 gap-4">
@@ -737,18 +623,18 @@ if (!worker) {
                     </div>
                     <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                       <label className="text-xs text-gray-500 block mb-1">{t('pinCode')}</label>
-                      <div className="font-medium text-gray-800">{worker.pinCode}</div>
+                      <div className="font-medium text-gray-800">{worker.pincode}</div>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
-                    <Briefcase className="mr-2 text-indigo-600" size={20} /> 
+                    <Briefcase className="mr-2 text-indigo-600" size={20} />
                     {t('jobTypes')}
                   </h3>
                   <div className="flex flex-wrap gap-3">
-                    {worker.jobTypes.map((type) => (
+                    {worker.dailyJobTypes.map((type) => (
                       <span
                         key={type}
                         className="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-full text-sm font-medium flex items-center shadow-sm"
@@ -758,10 +644,10 @@ if (!worker) {
                     ))}
                   </div>
                 </div>
-                
+
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                   <h3 className="text-lg font-bold text-gray-800 mb-5 flex items-center">
-                    <Settings className="mr-2 text-indigo-600" size={20} /> 
+                    <Settings className="mr-2 text-indigo-600" size={20} />
                     Account Settings
                   </h3>
                   <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium">
@@ -795,4 +681,4 @@ if (!worker) {
     </div>
   );
 }
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
+ 

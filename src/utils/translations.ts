@@ -3,50 +3,80 @@ export const translations = {
 
     translation: {
     // Common
-    welcome: "Welcome",
-    back: "Back",
-    next: "Next",
-    yes: "Yes",
-    no: "No",
-    cancel: "Cancel",
-    save: "Save",
-    edit: "Edit",
-    delete: "Delete",
-    confirm: "Confirm",
-    search: "Search",
-    loading: "Loading...",
-    error: "Error",
-    success: "Success",
-    // Auth
-    phoneLogin: 'Phone Login',
-    enterPhone: 'Enter Phone Number',
-    sendOTP: 'Send OTP',
-    enterOTP: 'Enter OTP',
-    login: 'Login',
-    logout: 'Logout',
-    changeNumber: 'Change Number',
-    verify: 'Verify',
-    // Registration
-    whatsYourName: "What's your name?",
-    enterName: 'Enter your name',
-    speakName: 'Speak your name',
-    ageAndPin: 'Age & Pin Code',
-    age: 'Age',
-    pinCode: 'Pin Code',
-    speakAge: 'Speak age',
-    speakPin: 'Speak pin code',
-    workType: 'What type of work do you do?',
-    dailyWorker: 'Daily Worker',
-    dailyWage: 'Daily wage work',
-    skilledWorker: 'Skilled Worker',
-    specialSkills: 'Special skills',
-    selectWork: 'What work do you do?',
-    selectSkills: 'What are your skills?',
-    selectOneOrMore: 'Select one or more',
-    takePhoto: 'Take Photo',
-    availableToday: 'Available for work today?',
-    complete: 'Complete',
-    progress: 'Progress',
+   welcome: "Welcome",
+      back: "Back",
+      next: "Next",
+      yes: "Yes",
+      no: "No",
+      cancel: "Cancel",
+      save: "Save",
+      edit: "Edit",
+      delete: "Delete",
+      confirm: "Confirm",
+      search: "Search",
+      loading: "Loading...",
+      error: "Error",
+      success: "Success",
+      continue: "Continue",
+
+      // Auth
+      phoneLogin: 'Phone Login',
+      enterPhone: 'Enter Phone Number',
+      sendOTP: 'Send OTP',
+      enterOTP: 'Enter OTP',
+      login: 'Login',
+      logout: 'Logout',
+      changeNumber: 'Change Number',
+      verify: 'Verify',
+      phonePlaceholder: "98765 43210",
+      otpPlaceholder: "123456",
+      changeLanguage: "Change Language",
+      speakNumber: "Speak your mobile number",
+      speakOTP: "Speak OTP code",
+      sentTo: "Sent to",
+      errorInvalidPhone: "Please enter a valid 10-digit phone number.",
+      errorSendOTP: "Failed to send OTP. Please check the number and try again.",
+      errorInvalidOTP: "The OTP you entered is incorrect. Please try again.",
+
+      // Voice Authentication
+      voiceAuth: {
+        enterPhoneToStart: "Enter your phone number to start voice verification.",
+        enterPhoneNumber: "Enter Phone Number",
+        createVoicePassword: "Create Voice Password",
+        speakToLogin: "Speak to Login",
+        pressAndHoldMic: "Press and hold the microphone and say the phrase below:",
+        voiceAuthPhrase: "My voice is my password",
+        recording: "Recording...",
+        releaseToStop: "Release to stop.",
+        verifyingVoice: "Verifying Voice...",
+        errorOccurred: "Error Occurred",
+        tryAgain: "Try Again",
+        micAccessDenied: "Microphone access was denied. Please enable it in your browser settings.",
+        voiceMatchFail: "Voice did not match. Please try again."
+      },
+
+      // Registration
+      whatsYourName: "What's your name?",
+      enterName: 'Enter your name',
+      speakName: 'Speak your name',
+      ageAndPin: 'Age & Pin Code',
+      age: 'Age',
+      pinCode: 'Pin Code',
+      speakAge: 'Speak age',
+      speakPin: 'Speak pin code',
+      workType: 'What type of work do you do?',
+      dailyWorker: 'Daily Worker',
+      dailyWage: 'Daily wage work',
+      skilledWorker: 'Skilled Worker',
+      specialSkills: 'Special skills',
+      selectWork: 'What work do you do?',
+      selectSkills: 'What are your skills?',
+      selectOneOrMore: 'Select one or more',
+      takePhoto: 'Take Photo',
+      availableToday: 'Available for work today?',
+      complete: 'Complete',
+      progress: 'Progress',
+    
     // Dashboard
     dashboard: 'Dashboard',
     findJobs: 'Find Jobs',
@@ -63,10 +93,6 @@ export const translations = {
     workersNeeded: 'Workers Needed',
     noJobsFound: 'No Jobs Found',
     noJobsAvailable: 'No jobs available in your area right now',
-    "changeLanguage": "Change Language",
-    "speakNumber": "Speak your mobile number",
-    "speakOTP": "Speak OTP code",
-    "sentTo": "Sent to",
     tryChangingFilters: 'Try changing your filters',
     showAllJobs: 'Show All Jobs',
     showNearbyJobs: 'Show Nearby Jobs',
@@ -107,7 +133,6 @@ export const translations = {
     transactionHistory: 'Transaction History',
     earnings: 'Earnings',
     withdraw: 'Withdraw',
-    otpPlaceholder: "123456",
     // Notifications
     notifications: 'Notifications',
     markAllAsRead: 'Mark all as read',
@@ -206,6 +231,7 @@ export const translations = {
     statsSuccessRateLabel: 'Success Rate',
     statsSupport: '24/7',
     statsSupportLabel: 'Support Available',
+    allJobsDescription: "All jobs within your area",
     // Testimonials
     testimonial1Text: "This platform changed my career. I went from struggling to find work to being contacted directly by employers.",
     testimonial1Name: "Maria Rodriguez",
@@ -247,13 +273,14 @@ export const translations = {
     communityForum: "Community Forum",
     newsletterTitle: "Stay Updated",
     newsletterSubtitle: "Get the latest job opportunities and platform updates on your phone",
-    phonePlaceholder: "Enter your phone number",
     subscribe: "Subscribe",
     // Copyright
     copyright: "© 2024 WorkConnect. All rights reserved.",
     Construction: "निर्माण",
     ConstructionCo: "Construction Co.",
       ElectricPro: "ElectricPro",
+      nearbyJobsDescription: "Jobs within 10km of your location",
+      playAudioForNearbyJobs: "Play audio for nearby jobs",
       PlumbingPlus: "PlumbingPlus" ,
       testimonialsTitle: "What our workers say" ,
       testimonialsSubtitle:"Hear from our workers about their experiences and how they achieved success on our platform.",
@@ -390,39 +417,63 @@ export const translations = {
 
       
     // Common
-    welcome: "स्वागत है",
-    back: "पीछे",
-    next: "आगे",
-    yes: "हाँ",
-    no: "नहीं",
-    cancel: "रद्द करें",
-    save: "सहेजें",
-    edit: "संपादित करें",
-    delete: "हटाएँ",
-    confirm: "पुष्टि करें",
-    search: "खोजें",
-    loading: "लोड हो रहा है...",
-    error: "त्रुटि",
-    success: "सफलता",
-    // Auth
-    phoneLogin: 'फोन लॉगिन',
-    enterPhone: 'फोन नंबर डालें',
-    sendOTP: 'ओटीपी भेजें',
-    enterOTP: 'ओटीपी डालें',
-    login: 'लॉगिन करें',
-    logout: 'लॉगआउट करें',
-    changeNumber: 'नंबर बदलें',
-    verify: 'सत्यापित करें',
+     welcome: "स्वागत है",
+      back: "पीछे",
+      next: "आगे",
+      yes: "हाँ",
+      no: "नहीं",
+      cancel: "रद्द करें",
+      save: "सहेजें",
+      edit: "संपादित करें",
+      delete: "हटाएँ",
+      confirm: "पुष्टि करें",
+      search: "खोजें",
+      loading: "लोड हो रहा है...",
+      error: "त्रुटि",
+      success: "सफलता",
+      continue: "जारी रखें",
+
+      // Auth
+      phoneLogin: 'फोन लॉगिन',
+      enterPhone: 'फोन नंबर डालें',
+      sendOTP: 'ओटीपी भेजें',
+      enterOTP: 'ओटीपी डालें',
+      login: 'लॉगिन करें',
+      logout: 'लॉगआउट करें',
+      changeNumber: 'नंबर बदलें',
+      verify: 'सत्यापित करें',
+      phonePlaceholder: "९८७६५४३२१०",
+      otpPlaceholder: "१२३४५६",
+      changeLanguage: "भाषा बदलें",
+      speakNumber: "अपना मोबाइल नंबर बोलें",
+      speakOTP: "ओटीपी कोड बोलें",
+      sentTo: "को भेजा गया",
+      errorInvalidPhone: "कृपया एक मान्य 10-अंकीय फ़ोन नंबर दर्ज करें।",
+      errorSendOTP: "ओटीपी भेजने में विफल। कृपया नंबर जांचें और पुनः प्रयास करें।",
+      errorInvalidOTP: "आपके द्वारा दर्ज किया गया ओटीपी गलत है। कृपया पुन: प्रयास करें।",
+
+      // Voice Authentication
+      voiceAuth: {
+        enterPhoneToStart: "आवाज सत्यापन शुरू करने के लिए अपना फ़ोन नंबर दर्ज करें।",
+        enterPhoneNumber: "फोन नंबर डालें",
+        createVoicePassword: "आवाज का पासवर्ड बनाएं",
+        speakToLogin: "लॉगिन करने के लिए बोलें",
+        pressAndHoldMic: "माइक्रोफ़ोन को दबाकर रखें और नीचे दिया गया वाक्यांश बोलें:",
+        voiceAuthPhrase: "मेरी आवाज मेरा पासवर्ड है",
+        recording: "रिकॉर्डिंग हो रही है...",
+        releaseToStop: "रोकने के लिए छोड़ें।",
+        verifyingVoice: "आवाज सत्यापित हो रही है...",
+        errorOccurred: "त्रुटि हुई",
+        tryAgain: "पुनः प्रयास करें",
+        micAccessDenied: "माइक्रोफ़ोन का एक्सेस अस्वीकार कर दिया गया। कृपया इसे अपनी ब्राउज़र सेटिंग्स में सक्षम करें।",
+        voiceMatchFail: "आवाज मेल नहीं खाई। कृपया पुनः प्रयास करें।"
+      },
     // Registration
     whatsYourName: 'आपका नाम क्या है?',
     enterName: 'अपना नाम लिखें',
     speakName: 'अपना नाम बोलें',
     ageAndPin: 'उम्र और पिन कोड',
     age: 'उम्र',
-    "changeLanguage": "भाषा बदलें",
-    "speakNumber": "अपना मोबाइल नंबर बोलें", 
-    "speakOTP": "ओटीपी कोड बोलें", 
-    "sentTo": "भेजा गया",
     pinCode: 'पिन कोड',
     speakAge: 'उम्र बोलें',
     speakPin: 'पिन कोड बोलें',
@@ -459,7 +510,6 @@ export const translations = {
     showNearbyJobs: 'पास की नौकरियां दिखाएं',
     perDay: 'प्रति दिन',
     call: 'कॉल करें',
-    otpPlaceholder: "१२३४५६",
     postedBy: 'द्वारा पोस्ट किया गया',
     // Job Types
     helper: 'सहायक',
@@ -633,7 +683,6 @@ export const translations = {
     communityForum: "समुदाय मंच",
     newsletterTitle: "अपडेट रहें",
     newsletterSubtitle: "नवीनतम नौकरी के अवसरों और प्लॅटफॉर्म अपडेट अपने फोन पर प्राप्त करें",
-    phonePlaceholder: "अपना फोन नंबर डालें",
     subscribe: "सदस्यता घ्या",
     
     // Copyright
@@ -776,28 +825,57 @@ export const translations = {
     translation: {
     // Common
     welcome: "स्वागत आहे",
-    back: "मागे",
-    next: "पुढे",
-    yes: "होय",
-    no: "नाही",
-    cancel: "रद्द करा",
-    save: "जतन करा",
-    edit: "संपादित करा",
-    delete: "हटवा",
-    confirm: "पुष्टी करा",
-    search: "शोधा",
-    loading: "लोड होत आहे...",
-    error: "त्रुटी",
-    success: "यश",
-    // Auth
-    phoneLogin: 'फोन लॉगिन',
-    enterPhone: 'फोन नंबर टाका',
-    sendOTP: 'ओटीपी पाठवा',
-    enterOTP: 'ओटीपी टाका',
-    login: 'लॉगिन करा',
-    logout: 'लॉगआउट करा',
-    changeNumber: 'नंबर बदला',
-    verify: 'सत्यापित करा',
+      back: "मागे",
+      next: "पुढे",
+      yes: "होय",
+      no: "नाही",
+      cancel: "रद्द करा",
+      save: "जतन करा",
+      edit: "संपादित करा",
+      delete: "हटवा",
+      confirm: "पुष्टी करा",
+      search: "शोधा",
+      loading: "लोड होत आहे...",
+      error: "त्रुटि",
+      success: "यश",
+      continue: "पुढे जा",
+
+      // Auth
+      phoneLogin: 'फोन लॉगिन',
+      enterPhone: 'फोन नंबर टाका',
+      sendOTP: 'ओटीपी पाठवा',
+      enterOTP: 'ओटीपी टाका',
+      login: 'लॉगिन करा',
+      logout: 'लॉगआउट करा',
+      changeNumber: 'नंबर बदला',
+      verify: 'सत्यापित करा',
+      phonePlaceholder: "९८७६५४३२१०",
+      otpPlaceholder: "१२३४५६",
+      changeLanguage: "भाषा बदला",
+      speakNumber: "तुमचा मोबाइल नंबर बोला",
+      speakOTP: "ओटीपी कोड बोला",
+      sentTo: "ला पाठवले",
+      errorInvalidPhone: "कृपया वैध १०-अंकी फोन नंबर प्रविष्ट करा.",
+      errorSendOTP: "OTP पाठवण्यात अयशस्वी. कृपया नंबर तपासा आणि पुन्हा प्रयत्न करा.",
+      errorInvalidOTP: "तुम्ही टाकलेला OTP चुकीचा आहे. कृपया पुन्हा प्रयत्न करा.",
+
+      // Voice Authentication
+      voiceAuth: {
+        enterPhoneToStart: "व्हॉइस व्हेरिफिकेशन सुरू करण्यासाठी तुमचा फोन नंबर टाका.",
+        enterPhoneNumber: "फोन नंबर टाका",
+        createVoicePassword: "व्हॉइस पासवर्ड तयार करा",
+        speakToLogin: "लॉगिन करण्यासाठी बोला",
+        pressAndHoldMic: "मायक्रोफोन दाबून धरा आणि खालील वाक्य बोला:",
+        voiceAuthPhrase: "माझा आवाज माझा पासवर्ड आहे",
+        recording: "रेकॉर्डिंग होत आहे...",
+        releaseToStop: "थांबवण्यासाठी सोडा.",
+        verifyingVoice: "आवाज तपासला जात आहे...",
+        errorOccurred: "त्रुटी आली",
+        tryAgain: "पुन्हा प्रयत्न करा",
+        micAccessDenied: "मायक्रोफोन प्रवेशास नकार दिला. कृपया तुमच्या ब्राउझर सेटिंग्जमध्ये ते सक्षम करा.",
+        voiceMatchFail: "आवाज जुळला नाही. कृपया पुन्हा प्रयत्न करा."
+      },
+
     // Registration
     whatsYourName: 'तुमचे नाव काय आहे?',
     enterName: 'तुमचे नाव लिहा',
@@ -839,10 +917,6 @@ export const translations = {
     showAllJobs: 'सर्व नोकऱ्या दाखवा',
     showNearbyJobs: 'जवळच्या नोकऱ्या दाखवा',
     perDay: 'दररोज',
-    "changeLanguage": "भाषा बदला",
-    "speakNumber": "तुमचा मोबाइल नंबर बोला",
-    "speakOTP": "ओटीपी कोड बोला",
-    "sentTo": "पाठवले",
     call: 'कॉल करा',
     postedBy: 'द्वारे पोस्ट केले',
     // Job Types
@@ -857,7 +931,6 @@ export const translations = {
     mason: 'राजमिस्त्री',
     welder: 'वेल्डर',
     driver: 'ड्रायव्हर',
-    otpPlaceholder: "१२३४५६",
     // Location Options
     nearbyJobs: 'जवळची कामे',
     allJobs: 'सर्व उपलब्ध काम',
@@ -1018,7 +1091,6 @@ export const translations = {
     communityForum: "समुदाय मंच", // Added
     newsletterTitle: "अद्ययावत राहा",
     newsletterSubtitle: "नवीनतम नोकरीच्या संधी आणि प्लॅटफॉर्म अद्यतने तुमच्या फोनवर मिळवा",
-    phonePlaceholder: "तुमचा फोन नंबर टाका",
     subscribe: "सदस्यता घ्या",
     // Copyright
     copyright: "© 2024 वर्ककनेक्ट. सर्व हक्क राखीव",
@@ -1153,14 +1225,15 @@ export const translations = {
   }
 };
 
+
 type DeepKeys<T> = T extends object ? {
-  [K in keyof T]: K extends string 
-    ? T[K] extends object 
-      ? `${K}.${DeepKeys<T[K]>}` 
-      : K
-    : never
+  [K in keyof T]: K extends string
+  ? T[K] extends object
+  ? `${K}.${DeepKeys<T[K]>}`
+  : K
+  : never
 }[keyof T] : never;
 
 export type Language = 'en' | 'hi' | 'mr';
 // Ensure 'en' has all keys for type checking
-export type TranslationKey = DeepKeys<typeof translations.en>;
+export type TranslationKey = DeepKeys<typeof translations.en.translation>;

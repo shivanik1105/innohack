@@ -1,39 +1,45 @@
-export interface Worker {
-  id: string;
-  phoneNumber: string;
-  name: string;
-  age: number;
-  pinCode: string;
-  photo?: string;
-  workerType: 'daily' | 'skilled';
-  isAvailableToday: boolean;
-  jobTypes: string[];
-  skills?: string[];
-  certifications?: Certification[];
-  portfolio?: PortfolioItem[];
-  rating: number;
-  totalJobs: number;
-  verificationStatus: 'pending' | 'verified' | 'rejected';
-  createdAt: Date;
-  language: string;
-}
+// This file defines the "rulebook" for your data types in the frontend.
+// It should match your Django models.
 
+// New interface for Certification, based on your code
 export interface Certification {
-  id: string;
-  type: 'government' | 'ngo' | 'private' | 'reference';
-  title: string;
-  imageUrl: string;
-  ipfsHash?: string;
-  isVerified: boolean;
-  uploadedAt: Date;
+  label: string;
+  url: string;
+  verified: boolean;
 }
 
+// New interface for PortfolioItem, based on your code
 export interface PortfolioItem {
-  id: string;
   title: string;
   imageUrl: string;
-  location: string;
-  completedAt: Date;
+  description?: string;
+}
+
+export interface Worker {
+  uid: string; // Changed from 'id' to match Firebase and backend
+  userType: 'daily' | 'skilled';
+  name: string;
+  age?: number;
+  pincode: string; // Standardized to 'pincode'
+  phoneNumber: string;
+  createdAt: string; // Dates from JSON are strings
+
+  // Daily worker fields
+  dailyJobTypes: string[];
+  isAvailableToday?: boolean;
+  // Skilled worker fields
+  profilePhotoUrl?: string; // Standardized to 'profilePhotoUrl'
+  skills: string[];
+  isVerified: boolean;
+  certifications?: Certification[]; // Added from your code
+  portfolio?: PortfolioItem[]; // Added from your code
+  averageRating: number; // Standardized to 'averageRating'
+  jobsCompleted: number; // Standardized to 'jobsCompleted'
+  
+  // New fields from your code
+  language?: string;
+  experience?: number;
+  location?: string;
 }
 
 export interface Job {
@@ -48,16 +54,16 @@ export interface Job {
   jobType: string;
   requiredWorkers: number;
   duration: string;
-  postedAt: Date;
-  status: 'open' | 'filled' | 'completed';
+  postedAt: Date; // Assuming this is converted to a Date object on the frontend
+  status: 'open' | 'in_progress' | 'completed';
 }
 
+// You can add other types here as needed
 export interface PaymentLog {
-  id: string;
-  workerId: string;
-  jobId: string;
-  amount: number;
-  status: 'paid' | 'pending';
-  workDate: Date;
-  paidAt?: Date;
+    id: string;
+    jobId: string;
+    jobTitle: string;
+    date: string;
+    amount: number;
+    status: 'Paid' | 'Pending';
 }

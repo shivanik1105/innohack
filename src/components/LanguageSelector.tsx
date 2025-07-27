@@ -5,10 +5,14 @@ import { useTranslation } from 'react-i18next';
 
 type Language = 'mr' | 'hi' | 'en';
 
-const LanguageSelector = () => {
+type LanguageSelectorProps = {
+  currentLanguage: Language;
+  onLanguageChange: (selectedLanguage: Language) => void;
+};
+
+const LanguageSelector = ({ currentLanguage, onLanguageChange }: LanguageSelectorProps) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('en');
 
   const languages = [
     { code: 'mr' as Language, name: 'मराठी', flag: '🇮🇳' },
@@ -17,19 +21,16 @@ const LanguageSelector = () => {
   ];
 
   useEffect(() => {
-    const storedLang = (localStorage.getItem('language') as Language) || (i18n.language as Language) || 'en';
-    setSelectedLanguage(storedLang);
-    i18n.changeLanguage(storedLang);
-  }, []);
+    i18n.changeLanguage(currentLanguage);
+    localStorage.setItem('language', currentLanguage);
+  }, [currentLanguage]);
 
   const handleLanguageChange = (language: Language) => {
-    setSelectedLanguage(language);
     setIsOpen(false);
-    i18n.changeLanguage(language);
-    localStorage.setItem('language', language); // fixed this line
+    onLanguageChange(language);
   };
 
-  const selectedLang = languages.find((lang) => lang.code === selectedLanguage);
+  const selectedLang = languages.find((lang) => lang.code === currentLanguage);
 
   return (
     <div className="relative inline-block text-left">
@@ -71,7 +72,7 @@ const LanguageSelector = () => {
                 key={language.code}
                 onClick={() => handleLanguageChange(language.code)}
                 className={`flex items-center w-full px-4 py-2 text-sm hover:bg-blue-50 transition-colors duration-150 ${
-                  selectedLanguage === language.code
+                  currentLanguage === language.code
                     ? 'bg-blue-50 text-blue-600 font-semibold'
                     : 'text-blue-500'
                 }`}

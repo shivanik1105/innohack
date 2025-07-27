@@ -1,57 +1,43 @@
-<<<<<<< HEAD
 import React, { useState, useEffect, useRef } from 'react';
-=======
-import React, { useState, useEffect } from 'react';
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
 import { Phone, ArrowRight, Check } from 'lucide-react';
 import VoiceButton from './VoiceButton';
+import LanguageSelector from './LanguageSelector'; // Assuming this component exists
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
-
-// Make sure your firebase.ts file exports 'auth'
 import { auth } from '../config/firebase'; 
 import { RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult } from 'firebase/auth';
 
+// --- FIX for 'grecaptcha' error ---
+declare const grecaptcha: any;
+
+// --- CORRECTED Component Props ---
+// This interface now includes all the props being passed from App.tsx
 interface PhoneLoginProps {
-  onLogin: (phoneNumber: string) => void;
-  onLanguageChange: () => void;
-  language: 'en' | 'hi' | 'mr';
+  onLogin: (phoneNumber: string, token: string) => void;
+  onLanguageChange: (language: 'en' | 'hi' | 'mr') => void; // Added this prop
+  language: 'en' | 'hi' | 'mr'; // Added this prop
 }
 
-export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProps) {
-  
+export default function PhoneLogin({ onLogin, onLanguageChange, language }: PhoneLoginProps) {
   const { t, i18n } = useTranslation();
-  
-    const [language, setLanguage] = useState<string>('en');
-     useEffect(() => {
-      const storedLang = localStorage.getItem('appLanguage');
-      if (storedLang === 'hi' || storedLang === 'mr' || storedLang === 'en') {
-        i18n.changeLanguage(storedLang); // ✅ Works now
-        setLanguage(storedLang);
-      }
-    }, []); // ✅ Remove i18n from dependency array
-  
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState<'phone' | 'otp'>('phone');
+  // The step state now correctly includes the initial language selection
+  const [step, setStep] = useState<'language' | 'phone' | 'otp'>('language');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  // --- Firebase State ---
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const recaptchaContainerRef = useRef<HTMLDivElement>(null);
 
-  // --- Set up reCAPTCHA ---
+  // This effect sets up the invisible reCAPTCHA verifier required by Firebase
   useEffect(() => {
     if (recaptchaContainerRef.current) {
       try {
         const verifier = new RecaptchaVerifier(auth, recaptchaContainerRef.current, {
           'size': 'invisible',
-          'callback': (response: any) => {
-            console.log("reCAPTCHA resolved, ready to send OTP.");
+          'callback': () => {
+            console.log("reCAPTCHA resolved.");
           }
         });
-        // Attach verifier to window object to be accessible in handler functions
         (window as any).recaptchaVerifier = verifier;
       } catch (e) {
         console.error("Error setting up reCAPTCHA", e);
@@ -60,12 +46,16 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
     }
   }, []);
 
+  // Handler for when a language is selected from the LanguageSelector component
+  const handleLanguageSelect = (selectedLanguage: 'en' | 'hi' | 'mr') => {
+    i18n.changeLanguage(selectedLanguage);
+    onLanguageChange(selectedLanguage); // Notify the parent component
+    setStep('phone');
+  };
 
-  // --- Real Firebase OTP Sending ---
+  // Handler to send the OTP via Firebase
   const handlePhoneSubmit = async () => {
-<<<<<<< HEAD
-    // Add the country code for Firebase
-    const fullPhoneNumber = `+91${phoneNumber}`; 
+    const fullPhoneNumber = `+91${phoneNumber}`;
     if (phoneNumber.length !== 10) {
       setError(t('errorInvalidPhone'));
       return;
@@ -77,41 +67,30 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
       const appVerifier = (window as any).recaptchaVerifier;
       const result = await signInWithPhoneNumber(auth, fullPhoneNumber, appVerifier);
       setConfirmationResult(result);
-      setIsLoading(false);
       setStep('otp');
     } catch (err: any) {
       console.error("Firebase OTP Send Error:", err);
-      setError(t('errorSendOTP')); // Use a translated error
-      setIsLoading(false);
+      setError(t('errorSendOTP'));
       // It's good practice to reset reCAPTCHA on error
       if ((window as any).recaptchaVerifier) {
         (window as any).recaptchaVerifier.render().then((widgetId: any) => {
-            if (typeof grecaptcha !== 'undefined') {
-                grecaptcha.reset(widgetId);
-            }
+          if (typeof grecaptcha !== 'undefined') {
+            grecaptcha.reset(widgetId);
+          }
         });
       }
-=======
-    if (phoneNumber.length === 10) {
-      setIsLoading(true);
-      console.log("OTP correct, calling onLogin with", phoneNumber);
-      setTimeout(() => {
-        setIsLoading(false);
-        setStep('otp');
-      }, 1500);
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
     }
+    setIsLoading(false);
   };
 
-  // --- Real Firebase OTP Verification ---
+  // Handler to verify the OTP and complete the login
   const handleOtpSubmit = async () => {
-<<<<<<< HEAD
     if (otp.length !== 6) {
       setError(t('errorInvalidOTP'));
       return;
     }
     if (!confirmationResult) {
-      setError("Please request an OTP first."); // Should not happen in normal flow
+      setError("Please request an OTP first.");
       return;
     }
 
@@ -119,25 +98,19 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
     setError('');
     try {
       const userCredential = await confirmationResult.confirm(otp);
-      // Successfully signed in
+      // After verification, get the secure ID token to send to the backend
+      const token = await userCredential.user.getIdToken();
       console.log("User logged in:", userCredential.user);
-      setIsLoading(false);
-      onLogin(userCredential.user.phoneNumber || phoneNumber); // Pass phone number to parent
+      // Pass both the phone number and the token to the parent component
+      onLogin(userCredential.user.phoneNumber || phoneNumber, token);
     } catch (err: any) {
       console.error("Firebase OTP Verify Error:", err);
-      setError(t('errorInvalidOTP')); // Use a translated error
-      setIsLoading(false);
-=======
-    if (otp.length === 6) {
-      setIsLoading(true);
-      setTimeout(() => {
-        setIsLoading(false);
-        onLogin(phoneNumber);
-      }, 1500);
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
+      setError(t('errorInvalidOTP'));
     }
+    setIsLoading(false);
   };
 
+  // Handler for voice input
   const handleVoiceInput = (text: string) => {
     const numbers = text.replace(/\D/g, '');
     if (step === 'phone') {
@@ -147,77 +120,38 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
-      {/* This invisible div is required for Firebase reCAPTCHA */}
-      <div ref={recaptchaContainerRef}></div>
+  // --- RENDER LOGIC ---
 
-      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
-<<<<<<< HEAD
-        {step === 'language' && (
+  const renderContent = () => {
+    switch (step) {
+      case 'language':
+        return (
           <LanguageSelector
             currentLanguage={language}
             onLanguageChange={handleLanguageSelect}
           />
-        )}
-
-        {step !== 'language' && (
-          <>
-            <div className="text-center mb-8">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Phone className="w-10 h-10 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                {step === 'phone' ? t('enterPhone') : t('enterOTP')}
-              </h1>
-              <p className="text-gray-600">
-                {step === 'phone' ? t('phoneLogin') : `${t('otpSentTo')} +91${phoneNumber}`}
-=======
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Phone className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {step === 'phone' ? t('enterPhone') : t('enterOTP')}
-          </h1>
-          <p className="text-gray-600">
-            {step === 'phone' ? t('phoneLogin') : t('enterOTP')}
-          </p>
-
-          <button
-            onClick={onLanguageChange}
-            className="mt-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            🌐 {t('changeLanguage')}
-          </button>
-        </div>
-
-        {step === 'phone' ? (
+        );
+      case 'phone':
+        return (
           <div className="space-y-6">
             <div>
-              <label className="block text-lg font-semibold text-gray-900 mb-3 text-center">
-                {t('enterPhone')}
-              </label>
-              <div className="relative">
+              <div className="relative flex items-center">
+                <span className="absolute left-4 text-xl text-gray-500">+91</span>
                 <input
                   type="tel"
                   value={phoneNumber}
-                  onChange={(e) =>
-                    setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))
-                  }
+                  onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                   placeholder={t('phonePlaceholder')}
-                  className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none"
+                  className="w-full p-4 pl-12 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none"
                   maxLength={10}
                 />
               </div>
             </div>
-
             <VoiceButton
               onVoiceInput={handleVoiceInput}
               placeholder={`${t('enterPhone')} - ${t('speakNumber')}`}
               className="justify-center"
             />
-
             <button
               onClick={handlePhoneSubmit}
               disabled={phoneNumber.length !== 10 || isLoading}
@@ -233,147 +167,79 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
               )}
             </button>
           </div>
-        ) : (
+        );
+      case 'otp':
+        return (
           <div className="space-y-6">
             <div>
-              <label className="block text-lg font-semibold text-gray-900 mb-3 text-center">
-                {t('enterOTP')}
-              </label>
               <div className="relative">
                 <input
                   type="text"
                   value={otp}
-                  onChange={(e) =>
-                    setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))
-                  }
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder={t('otpPlaceholder')}
                   className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none tracking-widest"
                   maxLength={6}
                 />
               </div>
-              <p className="text-sm text-gray-500 text-center mt-2">
-                {t('sentTo')} {phoneNumber}
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
-              </p>
-              
-              <button
-                onClick={() => setStep('language')}
-                className="mt-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
-              >
-                🌐 {t('changeLanguage')}
-              </button>
             </div>
-
-<<<<<<< HEAD
-            {/* Error Message Display */}
-            {error && <p className="mb-4 text-sm text-center text-red-600 bg-red-100 p-2 rounded-lg">{error}</p>}
-=======
             <VoiceButton
               onVoiceInput={handleVoiceInput}
               placeholder={`${t('enterOTP')} - ${t('speakOTP')}`}
               className="justify-center"
             />
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
-
-            {step === 'phone' ? (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-lg font-semibold text-gray-900 mb-3 text-center">
-                    {t('enterPhone')}
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-4 text-xl text-gray-500">+91</span>
-                    <input
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      placeholder="98765 43210"
-                      className="w-full p-4 pl-12 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none"
-                      maxLength={10}
-                    />
-                  </div>
-                </div>
-
-<<<<<<< HEAD
-                <VoiceButton
-                  onVoiceInput={handleVoiceInput}
-                  placeholder={`${t('enterPhone')} - Speak your mobile number`}
-                  className="justify-center"
-                />
-
-                <button
-                  onClick={handlePhoneSubmit}
-                  disabled={phoneNumber.length !== 10 || isLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white p-4 rounded-2xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-300 flex items-center justify-center"
-                >
-                  {isLoading ? (
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                  ) : (
-                    <>
-                      {t('sendOTP')}
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </>
-                  )}
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-lg font-semibold text-gray-900 mb-3 text-center">
-                    {t('enterOTP')}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                      placeholder="123456"
-                      className="w-full p-4 text-xl text-center border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none tracking-widest"
-                      maxLength={6}
-                    />
-                  </div>
-                </div>
-
-                <VoiceButton
-                  onVoiceInput={handleVoiceInput}
-                  placeholder={`${t('enterOTP')} - Speak OTP code`}
-                  className="justify-center"
-                />
-
-                <button
-                  onClick={handleOtpSubmit}
-                  disabled={otp.length !== 6 || isLoading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white p-4 rounded-2xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-300 flex items-center justify-center"
-                >
-                  {isLoading ? (
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                  ) : (
-                    <>
-                      {t('login')}
-                      <Check className="w-5 h-5 ml-2" />
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={() => setStep('phone')}
-                  className="w-full text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"
-                >
-                  {t('changeNumber')}
-                </button>
-              </div>
-            )}
-          </>
-=======
             <button
-              onClick={() => setStep('phone')}
+              onClick={handleOtpSubmit}
+              disabled={otp.length !== 6 || isLoading}
+              className="w-full bg-gradient-to-r from-blue-600 to-green-600 text-white p-4 rounded-2xl font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed hover:shadow-lg transition-all duration-300 flex items-center justify-center"
+            >
+              {isLoading ? (
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              ) : (
+                <>
+                  {t('login')}
+                  <Check className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => { setStep('phone'); setError(''); }}
               className="w-full text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition-colors"
             >
               {t('changeNumber')}
             </button>
           </div>
->>>>>>> 457281740a48c8b65146862eb59bdf8e35f8ac50
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+      <div ref={recaptchaContainerRef}></div>
+      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
+        {step !== 'language' && (
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Phone className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              {step === 'phone' ? t('enterPhone') : t('enterOTP')}
+            </h1>
+            <p className="text-gray-600">
+              {step === 'phone' ? t('phoneLogin') : `${t('sentTo')} +91${phoneNumber}`}
+            </p>
+            <button
+              onClick={() => setStep('language')}
+              className="mt-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
+            >
+              🌐 {t('changeLanguage')}
+            </button>
+          </div>
         )}
+
+        {error && <p className="mb-4 text-sm text-center text-red-600 bg-red-100 p-2 rounded-lg">{error}</p>}
+
+        {renderContent()}
       </div>
     </div>
   );
