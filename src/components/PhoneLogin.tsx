@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Phone, ArrowRight, Check } from 'lucide-react';
 import VoiceButton from './VoiceButton';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 interface PhoneLoginProps {
   onLogin: (phoneNumber: string) => void;
@@ -13,6 +13,9 @@ interface PhoneLoginProps {
 export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProps) {
   
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   
     const [language, setLanguage] = useState<string>('en');
      useEffect(() => {
@@ -58,6 +61,7 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
     }
   };
 
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md">
@@ -73,12 +77,11 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
           </p>
 
           <button
-            onClick={onLanguageChange}
+            onClick={() => navigate('/select-language', { state: { from: location.pathname, step } })}
             className="mt-2 text-sm text-blue-600 hover:text-blue-700 transition-colors"
           >
             🌐 {t('changeLanguage')}
           </button>
-        </div>
 
         {step === 'phone' ? (
           <div className="space-y-6">
@@ -175,5 +178,7 @@ export default function PhoneLogin({ onLogin, onLanguageChange }: PhoneLoginProp
         )}
       </div>
     </div>
+      </div>
   );
+
 }

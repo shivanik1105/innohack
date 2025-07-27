@@ -1,21 +1,23 @@
-import { Home, Search, MessageSquare, Settings, FileText, BarChart2 } from 'lucide-react';
+import { Home, Search, MessageSquare, Settings, FileText, BarChart2, User } from 'lucide-react';
+import React from 'react';
 
-export default function Sidebar() {
+export default function Sidebar({ activeTab }: { activeTab: string }) {
   return (
     <aside className="h-screen w-64 bg-white border-r flex flex-col justify-between">
       <div>
         <div className="px-6 py-4 font-bold text-xl text-blue-600">JobFinder</div>
         <nav className="mt-6 space-y-2 px-4">
-          <SidebarItem icon={<Home size={18} />} label="Home" />
-          <SidebarItem icon={<Search size={18} />} label="Search Job" active />
-          <SidebarItem icon={<MessageSquare size={18} />} label="Chat" badge="8" />
-          <SidebarItem icon={<FileText size={18} />} label="Projects" />
-          <SidebarItem icon={<BarChart2 size={18} />} label="Payments" />
-          <SidebarItem icon={<Settings size={18} />} label="Settings" />
+          <SidebarItem icon={<Home size={18} />} label="Home" active={activeTab === 'home'} />
+          <SidebarItem icon={<Search size={18} />} label="Search Job" active={activeTab === 'search'} />
+          <SidebarItem icon={<MessageSquare size={18} />} label="Chat" badge="8" active={activeTab === 'chat'} />
+          <SidebarItem icon={<FileText size={18} />} label="Projects" active={activeTab === 'projects'} />
+          <SidebarItem icon={<BarChart2 size={18} />} label="Payments" active={activeTab === 'payments'} />
+          <SidebarItem icon={<User size={18} />} label="Aadhaar" active={activeTab === 'aadhaar'} />
+          <SidebarItem icon={<Settings size={18} />} label="Settings" active={activeTab === 'settings'} />
         </nav>
       </div>
       <div className="p-4 flex items-center space-x-3">
-        <img src="/avatar.png" className="w-10 h-10 rounded-full" />
+        <img src="/avatar.png" className="w-10 h-10 rounded-full" alt="User avatar" />
         <div>
           <p className="text-sm font-medium">Eren</p>
           <p className="text-xs text-gray-500">Designer</p>

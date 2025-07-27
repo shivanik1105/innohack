@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next';
 export default function LandingPage() {
 
   const navigate = useNavigate();
-  const { t } = useTranslation(); // Hook to access translations
+  const { t, i18n } = useTranslation(); // Hook to access translations
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-[#e9f1fd] to-[#f2f7ff]">
@@ -38,23 +38,41 @@ export default function LandingPage() {
               </div>
             </div>
             <div className="flex gap-4 mt-4">
-              <div>
-                {/* Other content */}
-                <LanguageSelector />
-              </div>
-              <Button
-                variant="outline"
-                className="px-6 py-3 border-blue-600 text-blue-600 text-lg"
-                onClick={() => navigate("/register")}
-              >
-                {t('buildProfile')}
-              </Button>
-            </div>
-            <div className="flex gap-4 mt-6 flex-wrap">
-              <span className="bg-white px-4 py-2 rounded shadow text-sm">{t('ConstructionCo')}</span>
-              <span className="bg-white px-4 py-2 rounded shadow text-sm">{t('ElectricPro')}</span>
-              <span className="bg-white px-4 py-2 rounded shadow text-sm">{t('PlumbingPlus')}</span>
-            </div>
+<div className="relative w-full max-w-xs mx-auto space-y-3">
+  <p className="text-gray-600 text-lg font-medium text-center md:text-left">
+    {t('selectpreferredLanguage')}
+  </p>
+
+  <div className="relative">
+    <select
+      id="language-select"
+      value={i18n.language}
+      onChange={(e) => {
+        i18n.changeLanguage(e.target.value);
+        localStorage.setItem('appLanguage', e.target.value); // Save preference
+      }}
+      className="appearance-none w-full bg-gradient-to-r from-[#e9f1fd] to-[#f2f7ff] border-2 border-blue-600 
+                text-blue-700 px-6 py-3 pr-10 rounded-lg text-lg font-medium
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                hover:border-blue-700 hover:text-blue-800 transition-all duration-200
+                cursor-pointer"
+    >
+      <option value="" disabled hidden>
+        {t('chooseLanguage')}
+      </option>
+      <option value="en" className="py-2">English</option>
+      <option value="hi" className="py-2">हिन्दी</option>
+      <option value="mr" className="py-2">मराठी</option>
+    </select>
+
+    {/* Custom dropdown arrow */}
+    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+      <svg className="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    </div>
+  </div>
+</div>            </div>
             <Button
               className="
                 w-[400px]
@@ -84,12 +102,12 @@ export default function LandingPage() {
               className="rounded-2xl shadow-lg w-full  h-[600px] object-cover transition-transform duration-300 hover:scale-105"
             />
             {/* Live Jobs Available */}
-            <Card className="absolute top-[-20px] left-[-20px] px-4 py-2 bg-white shadow-md border rounded-xl">
-              <div className="text-sm text-gray-500">
-                <span className="w-2 h-2 rounded-full bg-red-400 inline-block"></span>
+            <Card className="absolute top-[-20px] left-[-20px] px-5 py-3 bg-white border border-gray-200 rounded-2xl shadow-lg space-y-1">
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block mr-2"></span>
                 {t('liveJobsAvailable')}
               </div>
-              <div className="text-blue-700 text-xl font-bold">247</div>
+              <div className="text-blue-700 text-2xl font-semibold tracking-tight">247</div>
             </Card>
             {/* Verified Workers */}
             <Card className="absolute bottom-[-20px] right-[-20px] px-4 py-2 bg-white shadow-md border rounded-xl">
