@@ -453,6 +453,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       : t('workerRegistration.workType.selectSkilled')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
+<<<<<<< HEAD
                     {(jobCategories[formData.workerType] || []).map((job) => (
                       <motion.button
                         key={job.id}
@@ -468,8 +469,30 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                         {t(`workerRegistration.jobTypes.${job.id}`)}
                       </motion.button>
                     ))}
+=======
+                    {(jobCategories[formData.workerType] || []).map((job) => {
+                      console.log(`Translating: ${job.id}`, t(job.id));
+                      return (
+                        <motion.button
+                          key={job.id}
+                          whileHover={buttonHover}
+                          whileTap={buttonTap}
+                          onClick={() => handleJobTypeToggle(job.id)}
+                          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                            formData.jobTypes.includes(job.id)
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                          }`}
+                        >
+                          {t(job.id)}
+                        </motion.button>
+                      );
+                    })}
+>>>>>>> f0872ccf35385a77a02f3128e31aa4162f5c8ae6
                   </div>
+                
                 </div>
+                
               )}
             </div>
                         
