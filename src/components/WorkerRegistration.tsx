@@ -425,7 +425,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  {t('workerRegistration.workType.daily')}
+                  {t('daily')}
                 </motion.button>
                 <motion.button
                   whileHover={buttonHover}
@@ -441,7 +441,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  {t('workerRegistration.workType.skilled')}
+                  {t('skilled')}
                 </motion.button>
               </div>
 
@@ -449,11 +449,10 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
                     {formData.workerType === 'daily' 
-                      ? t('workerRegistration.workType.selectDaily') 
-                      : t('workerRegistration.workType.selectSkilled')}
+                      ? t('selectDaily') 
+                      : t('selectSkilled')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
-<<<<<<< HEAD
                     {(jobCategories[formData.workerType] || []).map((job) => (
                       <motion.button
                         key={job.id}
@@ -466,10 +465,9 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                             : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                         }`}
                       >
-                        {t(`workerRegistration.jobTypes.${job.id}`)}
+                        {t(`${job.id}`)}
                       </motion.button>
                     ))}
-=======
                     {(jobCategories[formData.workerType] || []).map((job) => {
                       console.log(`Translating: ${job.id}`, t(job.id));
                       return (
@@ -488,7 +486,6 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                         </motion.button>
                       );
                     })}
->>>>>>> f0872ccf35385a77a02f3128e31aa4162f5c8ae6
                   </div>
                 
                 </div>
@@ -566,50 +563,50 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
           transition={{ delay: 0.2 }}
           className="w-full lg:w-[30%] bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
         >
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('workerRegistration.preview.title')}</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('Title')}</h2>
           
           <div className="space-y-6">
             <div className="border-b pb-4">
-              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('workerRegistration.preview.personal')}</h3>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('Personal')}</h3>
               {formData.name && (
                 <p className="text-gray-700 font-medium">{formData.name}</p>
               )}
               {formData.age && (
-                <p className="text-gray-700">{t('workerRegistration.personalInfo.age')}: {formData.age}</p>
+                <p className="text-gray-700">{t('Age')}: {formData.age}</p>
               )}
               {formData.pinCode && (
-                <p className="text-gray-700">{t('workerRegistration.personalInfo.pinCode')}: {formData.pinCode}</p>
+                <p className="text-gray-700">{t('PinCode')}: {formData.pinCode}</p>
               )}
               {formData.aadhaarNumber && (
                 <p className="text-gray-700 flex items-center">
                   <CreditCard className="w-4 h-4 mr-1" />
-                  {t('workerRegistration.personalInfo.aadhaarNumber')}: 
+                  {t('AadhaarNumber')}: 
                   {formData.aadhaarNumber.substring(0, 4)}-XXXX-XXXX-{formData.aadhaarNumber.substring(8)}
                 </p>
               )}
               {formData.gender && (
               <p className="text-gray-700">
-                {t('workerRegistration.personalInfo.gender')}: {t(`workerRegistration.personalInfo.${formData.gender}`)}
+                {t('Gender')}: {t(`${formData.gender}`)}
               </p>
             )}
 
             </div>
             
             <div className="border-b pb-4">
-              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('workerRegistration.preview.work')}</h3>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('work')}</h3>
               {formData.workerType && (
                 <p className="text-gray-700 capitalize">
                   {formData.workerType === 'daily' 
-                    ? t('workerRegistration.workType.daily') 
-                    : t('workerRegistration.workType.skilled')}
+                    ? t('daily') 
+                    : t('skilled')}
                 </p>
               )}
               {formData.jobTypes.length > 0 && (
                 <div className="mt-2">
                   <h4 className="text-sm font-medium text-gray-700 mb-1">
                     {formData.workerType === 'daily' 
-                      ? t('workerRegistration.preview.selectedJobs') 
-                      : t('workerRegistration.preview.selectedSkills')}
+                      ? t('selectedJobs') 
+                      : t('selectedSkills')}
                   </h4>
                   <div className="flex flex-wrap gap-1">
                     {formData.jobTypes.map(jobId => {
@@ -620,7 +617,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                           whileHover={{ scale: 1.05 }}
                           className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
                         >
-                          {t(`workerRegistration.jobTypes.${job.id}`)}
+                          {t(`.${job.id}`)}
                         </motion.span>
                       ) : null;
                     })}
@@ -630,7 +627,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
             </div>
             
             <div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('workerRegistration.preview.photo')}</h3>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">{t('photo')}</h3>
               {formData.photo ? (
                 <motion.div 
                   whileHover={{ scale: 1.05 }}

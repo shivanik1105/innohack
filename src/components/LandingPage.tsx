@@ -37,19 +37,20 @@ export default function LandingPage() {
                 <Clock className="w-5 h-5 text-blue-500" /> {t('supportText')}
               </div>
             </div>
-            <div className="flex gap-4 mt-4">
-<div className="relative w-full max-w-xs mx-auto space-y-3">
-  <p className="text-gray-600 text-lg font-medium text-center md:text-left">
-    {t('selectpreferredLanguage')}
-  </p>
+            <div className="flex items-center justify-center mt-4 gap-4">
+  {/* Label on the left */}
+  <label htmlFor="language-select" className="text-gray-600 text-lg font-medium whitespace-nowrap">
+    {t('Select Preferred Language')}
+  </label>
 
-  <div className="relative">
+  {/* Dropdown on the right */}
+  <div className="relative w-full max-w-xs">
     <select
       id="language-select"
       value={i18n.language}
       onChange={(e) => {
         i18n.changeLanguage(e.target.value);
-        localStorage.setItem('appLanguage', e.target.value); // Save preference
+        localStorage.setItem('appLanguage', e.target.value);
       }}
       className="appearance-none w-full bg-gradient-to-r from-[#e9f1fd] to-[#f2f7ff] border-2 border-blue-600 
                 text-blue-700 px-6 py-3 pr-10 rounded-lg text-lg font-medium
@@ -60,9 +61,9 @@ export default function LandingPage() {
       <option value="" disabled hidden>
         {t('chooseLanguage')}
       </option>
-      <option value="en" className="py-2">English</option>
-      <option value="hi" className="py-2">हिन्दी</option>
-      <option value="mr" className="py-2">मराठी</option>
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
     </select>
 
     {/* Custom dropdown arrow */}
@@ -72,7 +73,8 @@ export default function LandingPage() {
       </svg>
     </div>
   </div>
-</div>            </div>
+</div>
+
             <Button
               className="
                 w-[400px]

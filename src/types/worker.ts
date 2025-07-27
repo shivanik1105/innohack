@@ -10,7 +10,7 @@ export interface Worker {
   aadhaarCardImage: string | null | undefined;
   email?: string;
   dateOfBirth?: string;
-  workerType: 'daily' | 'skilled';
+  workerType: 'daily' | 'skilled' | 'semi-skilled';
   isAvailableToday: boolean;
   jobTypes: string[];
   skills?: string[];
@@ -19,7 +19,7 @@ export interface Worker {
   rating: number;
   totalJobs: number;
   verificationStatus: 'pending' | 'verified' | 'rejected';
-  createdAt: Date;
+  createdAt: string;
   language: string;
 }
 
@@ -30,7 +30,7 @@ export interface Certification {
   imageUrl: string;
   ipfsHash?: string;
   isVerified: boolean;
-  uploadedAt: Date;
+  uploadedAt: string;
 }
 
 export interface PortfolioItem {
@@ -38,7 +38,7 @@ export interface PortfolioItem {
   title: string;
   imageUrl: string;
   location: string;
-  completedAt: Date;
+  completedAt: string;
 }
 
 export interface Job {
@@ -63,6 +63,6 @@ export interface PaymentLog {
   jobId: string;
   amount: number;
   status: 'paid' | 'pending';
-  workDate: Date;
+  workDate: string;
   paidAt?: Date;
 }

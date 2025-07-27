@@ -1,9 +1,8 @@
 export const translations = {
   en: {
-
     translation: {
-    // Common
-    welcome: "Welcome",
+      // Common
+      welcome: "Welcome",
       back: "Back",
       next: "Next",
       yes: "Yes",
@@ -20,6 +19,9 @@ export const translations = {
       continue: "Continue",
       choose_language: "Choose Language",
       select_language_to_continue: "Please select your preferred language to continue.",
+      remove: "Remove",
+      saveChanges: "Save Changes",
+      editProfile: "Edit Profile",
 
       // Auth
       phoneLogin: 'Phone Login',
@@ -56,30 +58,9 @@ export const translations = {
         micAccessDenied: "Microphone access was denied. Please enable it in your browser settings.",
         voiceMatchFail: "Voice did not match. Please try again."
       },
-    // Registration
-    whatsYourName: "What's your name?",
-    enterName: 'Enter your name',
-    speakName: 'Speak your name',
-    ageAndPin: 'Age & Pin Code',
-    age: 'Age',
-    pinCode: 'Pin Code',
-    speakAge: 'Speak age',
-    speakPin: 'Speak pin code',
-    workType: 'What type of work do you do?',
-    dailyWorker: 'Daily Worker',
-    dailyWage: 'Daily wage work',
-    skilledWorker: 'Skilled Worker',
-    specialSkills: 'Special skills',
-    selectWork: 'What work do you do?',
-    selectSkills: 'What are your skills?',
-    selectOneOrMore: 'Select one or more',
-    takePhoto: 'Take Photo',
-    availableToday: 'Available for work today?',
-    complete: 'Complete',
-    progress: 'Progress',
-    choose_language: 'Choose Language',
-    // Dashboard
-    dashboard: 'Dashboard',
+      
+      // Dashboard & Common UI
+      dashboard: 'Dashboard',
       findJobs: 'Find Jobs',
       myJobs: 'My Jobs',
       profile: 'Profile',
@@ -116,8 +97,28 @@ export const translations = {
       registerNow: "Register Now",
       workerDataNotFound: "Worker data not found",
       registerAgainMessage: "Please register again to continue",
-    // Job Types
-   helper: 'Helper',
+      totalJobs: "Total Jobs",
+      rating: "Rating",
+      totalEarned: "Total Earned",
+      jobsForYou: "Jobs For You",
+      jobTypes: "Job Types",
+      manageProfileDetails: "Manage your profile details",
+      viewPaymentHistory: "View your payment history",
+      searchJobsPlaceholder: "Search jobs...",
+
+      // Sidebar
+      sidebar: {
+        jobs: "Jobs",
+        profile: "Profile",
+        payments: "Payments",
+        notifications: "Notifications",
+        settings: "Settings",
+        logout: "Logout"
+      },
+
+      // Job Types (used in registration and filters)
+      jobTypesData: {
+        helper: 'Helper',
         loader: 'Loader',
         cleaner: 'Cleaner',
         laborer: 'Laborer',
@@ -128,65 +129,10 @@ export const translations = {
         mason: 'Mason',
         welder: 'Welder',
         driver: 'Driver',
-    "manageProfileDetails": "Manage your profile details",
-  "viewPaymentHistory": "View your payment history",
-    // Location Options
-    remove: 'Remove',
-    // Profile
-    personalInfo: 'Personal Information',
-    AllJobs: 'All Jobs',
-    jobTypes1: 'Job Types',
-    certifications: 'Certifications',
-    upload: 'Upload',
-    uploadCert: 'Upload Certificate',
-    noCertificates: 'No certificates uploaded',
-    updateProfile: 'Update Profile',
-    changePhoto: 'Change Photo',
-    // Payments
-    transactionHistory: 'Transaction History',
-    earnings: 'Earnings',
-    withdraw: 'Withdraw',
-    //sidebar
-    sidebar: {
-        jobs: "Jobs",
-        profile: "Profile",
-        payments: "Payments",
-        notifications: "Notifications",
-        settings: "Settings",
-        logout: "Logout"
       },
-    // Settings
-    theme: 'Theme',
-    darkMode: 'Dark Mode',
-    lightMode: 'Light Mode',
-    help: 'Help',
-    about: 'About',
-    privacyPolicy: 'Privacy Policy',
-    termsOfService: 'Terms of Service',
-    version: 'Version',
-    stylingCV: 'Styling CV',
-    buildFri: 'BUILD FRI',
-    fillSection: 'Fill Section',
-    fillSectionDescription: 'Write some dummy text to section with example.',
-    courses: 'Courses',
-    newSection: 'New Section',
-    resumeSettings: 'Resume Settings',
-    resumeSettingsDescription: 'There are many variations of passages of heran ipsum dummy text available online.',
-    templates: 'Templates',
-    classic: 'Classic',
-    changeTemplate: 'Change Template',
-    templateOptions: 'Template Options',
-    checkerResume: 'Checker Resume',
-    downloadPDF: 'Download PDF',
-    upgrade: 'Upgrade',
-    colorSettings: 'Color Settings',
-    background: 'Background',
-    joinDoc: 'Join Doc',
-    uploadNewPicture: 'Upload New Picture',
-    admin: 'Admin',
-    institutionName: 'Institution Name',
-    timePeriod: 'Time Period',
-    workerRegistration: {
+
+      // Worker Registration Flow
+      workerRegistration: {
         title: "Worker Registration",
         stepsTitle: "Registration Steps",
         stepsDescription: "Complete all required fields to register",
@@ -207,6 +153,7 @@ export const translations = {
           selectGender: "Select Gender",
           male: "Male",
           female: "Female",
+          preferNotToSay: "Prefer not to say",
           aadhaarNumber: "Aadhaar Number",
           aadhaarPlaceholder: "Enter 12-digit Aadhaar",
           aadhaarDescription: "Your data is secure.",
@@ -264,271 +211,7 @@ export const translations = {
         }
       },
 
-    // Hero Section
-    heroTitle: "Connect with Trusted Employers",
-    heroSubtitle: "Connect with trusted employers and build your clyareer in the trades. Whether you need daily work or want to showcase your skills, we're here for you.",
-    workersCount: "10,000+ Workers",
-    saveChanges:"Save Changes",
-    citiesCount: "50+ Cities",
-    supportText: "24/7 Support",
-    buildProfile: "Build Your Profile",
-    // Path to Success Section
-    pathTitle: "Choose Your Path to Success",
-    pathSubtitle: "Whether you're looking for immediate work or building a long-term career, we have the right tools for your journey.",
-    // Daily Workers Card
-    dailyWorkersTitle: "Daily Wage Workers",
-    dailyWorkersSubtitle: "Instant access to immediate job opportunities",
-    aadhaarCardUploaded:"Aadhaar card uploaded",
-    dailyPerfectFor: "Perfect For:",
-    dailyPerfectForText: "Construction helpers, daily laborers, temporary workers seeking immediate income",
-    dailyFeaturesTitle: "Key Features:",
-    dailyFeature1: "One-tap phone verification and profile setup",
-    dailyFeature2: "Location-based job matching with pay rates",
-    dailyFeature3: "Simple availability toggle and payment tracking",
-    dailyGetStarted: "Get Started Quickly",
-    // Skilled Professionals Card
-    skilledTitle: "Skilled Professionals",
-    skilledSubtitle: "Build trust through verified expertise",
-    skilledPerfectFor: "Perfect For:",
-    skilledPerfectForText: "Licensed electricians, certified plumbers, experienced contractors with proven skills",
-    skilledFeaturesTitle: "Professional Features:",
-    skilledFeature1: "Upload certificates with Web3/IPFS verification",
-    skilledFeature2: "Showcase work photos and detailed job history",
-    skilledFeature3: "Verified badges and premium job access",
-    skilledBuildProfile: "Build Professional Profile",
-    // Features Section
-    featuresTitle: "Everything You Need to Succeed",
-    liveJobsAvailable: 'Live Jobs Available',
-    verifiedWorkers: 'Verified Workers',
-    otpLogin: 'OTP Login',
-    instantConnect: 'Instant Connect',
-    dailyPay: 'Daily Pay',
-    skillVerification: 'Skill Verification',
-    employerRatings: 'Employer Ratings',
-    workPortfolio: 'Work Portfolio',
-    verifiedBadges: 'Verified Badges',
-      "nearbyJobsDesc": "Jobs within 10km of your location",
-      "allJobsDesc": "All available jobs in your city",
-    otpLoginDescription: 'Quick phone verification gets you started in seconds, no lengthy forms required.',
-    securePlatform: 'Secure Platform',
-    securePlatformDescription: 'Your data is protected with enterprise-grade security and privacy controls.',
-    locationBasedJobs: 'Location-Based Jobs',
-    locationBasedJobsDescription: 'Find opportunities near you with real-time distance and transportation info.',
-    paymentTracking: 'Payment Tracking',
-    paymentTrackingDescription: 'Track earnings, payment history, and manage your income efficiently.',
-    skillVerificationDescription: 'Upload certificates and earn verified badges employers trust.',
-    realTimeUpdates: 'Real-Time Updates',
-    realTimeUpdatesDescription: 'Get instant notifications for new jobs, messages, and payment confirmations.',
-    ratingSystem: 'Rating System',
-    ratingSystemDescription: 'Build your reputation with employer ratings and verified reviews.',
-    employerNetwork: 'Employer Network',
-    employerNetworkDescription: 'Connect with verified employers across various industries and regions.',
-    statsWorkers: '10,000+',
-    statsWorkersLabel: 'Active Workers',
-    statsCities: '50+',
-    statsCitiesLabel: 'Cities Covered',
-    statsSuccessRate: '98%',
-    statsSuccessRateLabel: 'Success Rate',
-    selectpreferredLanguage:"Select your preferred language",
-    statsSupport: '24/7',
-    statsSupportLabel: 'Support Available',
-    fillAllSections: "Fill all sections",
-    editProfile:"Edit Profile",
-    // Testimonials
-    testimonial1Text: "This platform changed my career. I went from struggling to find work to being contacted directly by employers.",
-    testimonial1Name: "Maria Rodriguez",
-    testimonial1Role: "Licensed Electrician",
-    testimonial2Text: "Perfect for finding quick daily work. The OTP login is so fast, and I can find jobs in minutes.",
-    testimonial2Name: "James Chen",
-    testimonial2Role: "Construction Helper",
-    testimonial3Text: "The skill verification system really works. Employers trust my profile because of the verified badges.",
-    testimonial3Name: "Ahmad Hassan",
-    testimonial3Role: "Certified Plumber",
-    // Security Features
-    securityFeature1Title: "SSL Encryption",
-    securityFeature1Description: "End-to-end encryption for all data",
-    securityFeature2Title: "Data Protection",
-    securityFeature2Description: "GDPR compliant data handling",
-    securityFeature3Title: "Verified Platform",
-    securityFeature3Description: "Audited and certified security",
-    // Call to Action Footer
-    ctaFooter1: "Ready to start earning?",
-    ctaFooter2: "Join over 10,000 workers already earning through our platform",
-    ctaFooterButton: "Download the App",
-    completeFields:"Complete all required fields",
-    findJobsForYou:"Jobs for you",
-    // Footer
-    footerTagline: "Connecting Workers and Employers",
-    footerDescription: "WorkConnect is the leading platform for finding daily wage jobs and skilled professionals. Join our growing community today.",
-    quickLinks: "Quick Links",
-    forWorkers: "For Workers",
-    "email": "Email",
-  "emailPlaceholder": "Enter your email",
-    
-    findDailyJobs: "Find Daily Jobs",
-    buildYourProfile: "Build Your Profile",
-    workerSupport: "Worker Support",
-    forEmployers: "For Employers",
-    postJobs: "Post Jobs",
-    findWorkers: "Find Workers",
-    employerDashboard: "Employer Dashboard",
-    verificationServices: "Verification Services",
-    employerSupport: "Employer Support",
-    helpCenter: "Help Center",
-    safetyGuidelines: "Safety Guidelines",
-    communityForum: "Community Forum",
-    newsletterTitle: "Stay Updated",
-    dateOfBirth: "Date of Birth",
-  notSpecified: "Not specified",
-  dateFormat: "MM/DD/YYYY",
-    newsletterSubtitle: "Get the latest job opportunities and platform updates on your phone",
-    phonePlaceholder: "Enter your phone number",
-    subscribe: "Subscribe",
-    "searchJobsPlaceholder": "Search jobs...",
-    // Copyright
-    copyright: "© 2024 WorkConnect. All rights reserved.",
-    Construction: "निर्माण",
-    ConstructionCo: "Construction Co.",
-      ElectricPro: "ElectricPro",
-      PlumbingPlus: "PlumbingPlus" ,
-      testimonialsTitle: "What our workers say" ,
-      testimonialsSubtitle:"Hear from our workers about their experiences and how they achieved success on our platform.",
-    securityTitle: "Security and Privacy",
-    securitySubtitle: "We are committed to protecting your data. Our platform is secured with enterprise-grade security measures.",
-    ctaTitle:"Ready to start earning?",
-    ctaSubtitle: "Join over 10,000 workers already earning through our platform",
-    ctaButton: "Download the App",
-    ctaFooter: "Ready to start earning?",
-    featuresSubtitle: "Learn about the features available on our platform that make job searching easier.",
-    professionalProfile:"Build a Professional Profile",
-    quickJobs:"Quick Jobs for Daily Workers",
-    
-    workerNotFound: "Worker data not found",
-    aadhaarCardTitle: "Aadhaar Card",
-    aadhaarCardSubtitle: "Upload your Aadhaar card for verification",
-    select_language_to_continue: "Select a language to continue",
-    jobTypes: "Job Types",
-
-    registerAgainPrompt: "Please register again to continue using the app",
-    workerDataNotFound: "Worker data not found",
-      registerAgainMessage: "Please register again to continue",
-      WorkerConnect: "WorkerConnect",
-      tab: "Tab",
-      yourWorkPaymentsWillAppearHere: "Your work payments will appear here",
-    registerNow: "Register Now",
-    
-    errors: {
-      "aadhaarInvalidFormat": "Only image or PDF files are allowed for Aadhaar",
-      "aadhaarSizeExceeded": "Aadhaar file size should be under 5MB",
-            "registrationFailed": "There was an error processing your registration. Please try again.",
-      "notImage": "Please upload an image file",
-      "sizeExceeded": "Image size should be less than 5MB"
-
-    },
-    personalInfo: {
-      selectPlaceholder:"",
-      label:  "Gender",
-      selectGender: "Select Gender",
-      male: "Male",
-      gender: "Gender",
-      female: "Female",
-      preferNotToSay: "Prefer not to say",
-      aadhaarNumber: "Aadhaar Number",
-      aadhaarPlaceholder: "Enter 12-digit Aadhaar number",
-      aadhaarDescription: "Your Aadhaar number is required for verification",
-      title: "Personal Information",
-      description: "Please provide your personal details",
-      name: "Full Name",
-      age: "Age",
-      pinCode: "PIN Code",
-      namePlaceholder: "Enter your full name",
-      agePlaceholder: "Enter your age",
-      pinPlaceholder: "Enter 6-digit PIN code"
-    },sidebar: {
-        jobs: "Jobs",
-        profile: "Profile",
-        payments: "Payments",
-        notifications: "Notifications",
-        settings: "Settings",
-        logout: "Logout"
-      },
-    workType: {
-      title: "Work Type",
-      daily: "Daily Worker",
-      skilled: "Skilled Worker",
-      selectDaily: "Select Daily Jobs",
-      selectSkilled: "Select Skills"
-    },
-    jobTypes: {
-      cleaner: "Cleaner",
-      helper: "Helper",
-      loader: "Loader",
-      driver: "Driver",
-      laborer: "Laborer",
-      plumber: "Plumber",
-      electrician: "Electrician",
-      painter: "Painter",
-      carpenter: "Carpenter",
-      mason: "Mason",
-      welder: "Welder"
-    },
-    photo: {
-      title: "Profile Photo",
-      upload: "Upload Photo",
-      uploaded: "Photo uploaded"
-    },
-    preview: {
-      title: "Data Preview",
-      personal: "Personal Info",
-      work: "Work Type",
-      selectedJobs: "Selected Jobs:",
-      selectedSkills: "Selected Skills:",
-      photo: "Photo"
-    },
-    registration: {
-      complete: "Registration Complete",
-      redirecting: "Redirecting to dashboard...",
-      button: "Complete Registration",
-      processing: "Processing..."
-    },
-    steps: {
-      personal: "Personal Information",
-      work: "Work Type",
-      photo: "Profile Photo"
-    },
-    validation: {
-      aadhaarInvalid: "Please enter a valid 12-digit Aadhaar number",
-      nameRequired: "Please enter your name",
-      ageInvalid: "Please enter a valid age",
-      ageRange: "Please enter an age between 18 and 65",
-      pinInvalid: "Please enter a valid 6-digit PIN code",
-      workerTypeRequired: "Please select a worker type",
-      jobTypeRequired: "Please select at least one job type",
-      photoRequired: "Please upload a profile photo"
-    },
-        workerRegistration: {
-      fillAllSections: "Fill all sections",
-      completeFields: "Complete all required fields to register",
-      sections: {
-        personal: "Personal Information",
-      work: "Work Type", 
-        photo: "Profile Photo"
-      },
-      aadhaar: {
-        title: "Aadhaar Card",
-        upload: "Upload Aadhaar",
-        uploaded: "Aadhaar uploaded"
-      },
-
-      preview: {
-        // ... existing preview translations ...
-        personalInfoHeader: "Personal Info",
-        workTypeHeader: "Work Type",
-        photoHeader: "Photo",
-        selectedJobs: "Selected Jobs",
-      selectedSkills: "Selected Skills"
-      },
-      //landing page 
+      // Landing Page
       heroTitle: "Connect with Trusted Employers",
       heroSubtitle: "Connect with trusted employers and build your career in the trades. Whether you need daily work or want to showcase your skills, we're here for you.",
       workersCount: "10,000+ Workers",
@@ -644,13 +327,9 @@ export const translations = {
       newsletterSubtitle: "Get the latest job opportunities and platform updates on your phone",
       subscribe: "Subscribe",
       copyright: "© 2024 WorkConnect. All rights reserved.",
-    }
-
   }
-
-    }
   },
-  hi: {
+ hi: {
 
     translation: {
 
@@ -725,6 +404,11 @@ export const translations = {
     availableToday: 'आज काम के लिए उपलब्ध हैं?',
     complete: 'पूर्ण',
     progress: 'प्रगति',
+    totalJobs: "कुल नौकरियां",
+      rating: "रेटिंग",
+      totalEarned: "कुल कमाई",
+      jobsForYou: "आपके लिए नौकरियां",
+      jobTypes: "नौकरी के प्रकार",
     // Dashboard
     dashboard: 'डैशबोर्ड',
       findJobs: 'नौकरियां खोजें',
@@ -778,7 +462,6 @@ export const translations = {
     fillAllSections:"सभी सेक्शन भरें",
     // Location Options
     // Profile
-    personalInfo: 'व्यक्तिगत जानकारी',
     jobTypes1: 'नौकरी के प्रकार',
     certifications: 'प्रमाणपत्र',
     upload: 'अपलोड करें',
@@ -791,12 +474,12 @@ export const translations = {
     transactionHistory: 'लेन-देन इतिहास',
     earnings: 'कमाई',
     withdraw: 'निकालें',
-  "nearbyJobsDesc": "आपके स्थान से 10 किमी के भीतर की नौकरियाँ",
-  "allJobsDesc": "आपके शहर में उपलब्ध सभी नौकरियाँ",
+  nearbyJobsDesc: "आपके स्थान से 10 किमी के भीतर की नौकरियाँ",
+  allJobsDesc: "आपके शहर में उपलब्ध सभी नौकरियाँ",
     // Notifications
     // Settings
-    "manageProfileDetails": "अपने प्रोफ़ाइल विवरण प्रबंधित करें",
-  "viewPaymentHistory": "भुगतान इतिहास देखें",
+    manageProfileDetails: "अपने प्रोफ़ाइल विवरण प्रबंधित करें",
+  viewPaymentHistory: "भुगतान इतिहास देखें",
     theme: 'थीम',
     darkMode: 'डार्क मोड',
     lightMode: 'लाइट मोड',
@@ -833,12 +516,12 @@ export const translations = {
     citiesCount: "50+ शहर",
     supportText: "24/7 समर्थन",
     buildProfile: "अपना प्रोफाइल बनाएं",
-    "email": "ईमेल",
-  "notSpecified": "निर्दिष्ट नहीं",
-  "emailPlaceholder": "अपना ईमेल दर्ज करें",
+    email: "ईमेल",
+  notSpecified: "निर्दिष्ट नहीं",
+  emailPlaceholder: "अपना ईमेल दर्ज करें",
     // Path to Success Section
     pathTitle: "सफलता का अपना रास्ता चुनें",
-    "searchJobsPlaceholder": "नौकरियों की खोज करें...",
+    searchJobsPlaceholder: "नौकरियों की खोज करें...",
     pathSubtitle: "चाहे आप तुरंत काम की तलाश कर रहे हों या दीर्घकालिक करियर बना रहे हों, हमारे पास आपकी यात्रा के लिए सही उपकरण हैं।",
     // Daily Workers Card
     dailyWorkersTitle: "दैनिक मजदूरी कर्मचारी",
@@ -928,8 +611,8 @@ export const translations = {
     // Call to Action Footer
     ctaFooter1: "कमाना शुरू करने के लिए तैयार हैं?",
     ctaFooterButton: "ऐप डाउनलोड करें",
-    "dateOfBirth": "जन्म तिथि",
-  "dateFormat": "DD/MM/YYYY",
+    dateOfBirth: "जन्म तिथि",
+  dateFormat: "DD/MM/YYYY",
 
     // Footer
     footerTagline: "कर्मचारियों और नियोक्ताओं को कनेक्ट करना",
@@ -1064,95 +747,95 @@ export const translations = {
       "tab": "टैब",
     
 
-    "aadhaar": {
-        "title": "आधार कार्ड अपलोड करें",
-        "upload": "आधार अपलोड करें",
-        "uploaded": "आधार अपलोड हो गया"
+    aadhaar: {
+        title: "आधार कार्ड अपलोड करें",
+        upload: "आधार अपलोड करें",
+      uploaded: "आधार अपलोड हो गया"
       },
-    "errors": {
-      "aadhaarInvalidFormat": "आधार के लिए केवल छवि या PDF फ़ाइलें अनुमत हैं",
-      "aadhaarSizeExceeded": "आधार फ़ाइल का आकार 5MB से कम होना चाहिए",
-            "registrationFailed": "पंजीकरण में त्रुटि हुई। कृपया पुनः प्रयास करें।",
-      "notImage": "कृपया एक इमेज फ़ाइल अपलोड करें",
-      "sizeExceeded": "छवि का आकार 5MB से कम होना चाहिए"
+    errors: {
+      aadhaarInvalidFormat: "आधार के लिए केवल छवि या PDF फ़ाइलें अनुमत हैं",
+      aadhaarSizeExceeded: "आधार फ़ाइल का आकार 5MB से कम होना चाहिए",
+            registrationFailed: "पंजीकरण में त्रुटि हुई। कृपया पुनः प्रयास करें।",
+      notImage: "कृपया एक इमेज फ़ाइल अपलोड करें",
+      sizeExceeded: "छवि का आकार 5MB से कम होना चाहिए"
 
     },
-    "personalInfo": {
-      "label": "लिंग",
-      "selectGender": "लिंग चुनें",
-      "male": "पुरुष",
-      "gender": "लिंग",
-      "female": "महिला",
-      "preferNotToSay": "कहना पसंद नहीं",
-       "aadhaarNumber": "आधार नंबर",
-      "aadhaarPlaceholder": "12-अंकों का आधार नंबर दर्ज करें",
-      "aadhaarDescription": "सत्यापन के लिए आपका आधार नंबर आवश्यक है",
-      "title": "व्यक्तिगत जानकारी",
-      "description": "कृपया अपनी व्यक्तिगत जानकारी प्रदान करें",
-      "name": "पूरा नाम",
-      "age": "आयु",
-      "pinCode": "पिन कोड",
-      "namePlaceholder": "अपना पूरा नाम दर्ज करें",
-      "agePlaceholder": "अपनी आयु दर्ज करें",
-      "pinPlaceholder": "6-अंकीय पिन कोड दर्ज करें"
+    personalInfo: {
+      label: "लिंग",
+      selectGender: "लिंग चुनें",
+      male: "पुरुष",
+      gender: "लिंग",
+      female: "महिला",
+      preferNotToSay: "कहना पसंद नहीं",
+       aadhaarNumber: "आधार नंबर",
+      aadhaarPlaceholder: "12-अंकों का आधार नंबर दर्ज करें",
+      aadhaarDescription: "सत्यापन के लिए आपका आधार नंबर आवश्यक है",
+      title: "व्यक्तिगत जानकारी",
+      description: "कृपया अपनी व्यक्तिगत जानकारी प्रदान करें",
+      name: "पूरा नाम",
+      age: "आयु",
+      pinCode: "पिन कोड",
+      namePlaceholder: "अपना पूरा नाम दर्ज करें",
+      agePlaceholder: "अपनी आयु दर्ज करें",
+      pinPlaceholder: "6-अंकीय पिन कोड दर्ज करें"
     },
-    "workType": {
-      "title": "कार्य प्रकार",
-      "daily": "दैनिक कार्यकर्ता",
-      "skilled": "प्रशिक्षित कार्यकर्ता",
-      "selectDaily": "दैनिक नौकरियाँ चुनें",
-      "selectSkilled": "कौशल चुनें"
+    workType: {
+      title: "कार्य प्रकार",
+      daily: "दैनिक कार्यकर्ता",
+      skilled: "प्रशिक्षित कार्यकर्ता",
+      selectDaily: "दैनिक नौकरियाँ चुनें",
+      selectSkilled: "कौशल चुनें"
     },
-    "jobTypes": {
-          "jobTypes": {
-      "cleaner": "सफाई कर्मी",
-      "loader": "लोडर",
-      "driver": "ड्राइवर",
-            "helper": "सहायक",
-      "laborer": "मज़दूर",
-      "plumber": "प्लंबर",
-      "electrician": "इलेक्ट्रीशियन",
-      "painter": "पेंटर",
-      "carpenter": "बढ़ई",
-      "mason": "राजमिस्त्री",
-      "welder": "वेल्डर"
+    jobTypes: {
+          jobTypes: {
+      cleaner: "सफाई कर्मी",
+      loader: "लोडर",
+      driver: "ड्राइवर",
+            helper: "सहायक",
+      laborer: "मज़दूर",
+      plumber: "प्लंबर",
+      electrician: "इलेक्ट्रीशियन",
+      painter: "पेंटर",
+      carpenter: "बढ़ई",
+      mason: "राजमिस्त्री",
+      welder: "वेल्डर"
 
     },
 
     },
-    "photo": {
-      "title": "प्रोफ़ाइल फोटो",
-      "upload": "फोटो अपलोड करें",
-      "uploaded": "फोटो अपलोड हो गई"
+    photo: {
+      title: "प्रोफ़ाइल फोटो",
+      upload: "फोटो अपलोड करें",
+      uploaded: "फोटो अपलोड हो गई"
     },
-    "preview": {
-      "title": "डेटा पूर्वावलोकन",
-      "personal": "व्यक्तिगत जानकारी",
-      "work": "कार्य प्रकार",
-      "selectedJobs": "चयनित नौकरियाँ:",
-      "selectedSkills": "चयनित कौशल:",
-      "photo": "फोटो"
+    preview: {
+      title: "डेटा पूर्वावलोकन",
+      personal: "व्यक्तिगत जानकारी",
+      work: "कार्य प्रकार",
+      selectedJobs: "चयनित नौकरियाँ:",
+      selectedSkills: "चयनित कौशल:",
+      photo: "फोटो"
     },
-    "registration": {
-      "complete": "पंजीकरण पूर्ण",
-      "redirecting": "डैशबोर्ड पर पुनर्निर्देशित कर रहे हैं...",
-      "button": "पंजीकरण पूर्ण करें",
-      "processing": "प्रसंस्करण हो रहा है..."
+    registration: {
+      complete: "पंजीकरण पूर्ण",
+      redirecting: "डैशबोर्ड पर पुनर्निर्देशित कर रहे हैं...",
+      button: "पंजीकरण पूर्ण करें",
+      processing: "प्रसंस्करण हो रहा है..."
     },
-    "steps": {
-      "personal": "व्यक्तिगत जानकारी",
-      "work": "कार्य प्रकार",
-      "photo": "प्रोफ़ाइल फोटो"
+    steps: {
+      personal: "व्यक्तिगत जानकारी",
+      work: "कार्य प्रकार",
+      photo: "प्रोफ़ाइल फोटो"
     },
-    "validation": {
-      "aadhaarInvalid": "कृपया एक वैध 12-अंकों का आधार नंबर दर्ज करें",
-      "nameRequired": "कृपया अपना नाम दर्ज करें",
-      "ageInvalid": "कृपया मान्य आयु दर्ज करें",
-      "ageRange": "कृपया 18 से 65 वर्ष की आयु दर्ज करें",
-      "pinInvalid": "कृपया मान्य 6-अंकीय पिन कोड दर्ज करें",
-      "workerTypeRequired": "कृपया कार्यकर्ता प्रकार चुनें",
-      "jobTypeRequired": "कृपया कम से कम एक नौकरी प्रकार चुनें",
-      "photoRequired": "कृपया एक प्रोफ़ाइल फोटो अपलोड करें"
+    validation: {
+      aadhaarInvalid: "कृपया एक वैध 12-अंकों का आधार नंबर दर्ज करें",
+      nameRequired: "कृपया अपना नाम दर्ज करें",
+      ageInvalid: "कृपया मान्य आयु दर्ज करें",
+      ageRange: "कृपया 18 से 65 वर्ष की आयु दर्ज करें",
+      pinInvalid: "कृपया मान्य 6-अंकीय पिन कोड दर्ज करें",
+      workerTypeRequired: "कृपया कार्यकर्ता प्रकार चुनें",
+      jobTypeRequired: "कृपया कम से कम एक नौकरी प्रकार चुनें",
+      photoRequired: "कृपया एक प्रोफ़ाइल फोटो अपलोड करें"
     },
  workerRegistration: {
         title: "कार्यकर्ता पंजीकरण",
@@ -1228,8 +911,7 @@ export const translations = {
           notImage: "कृपया एक इमेज फ़ाइल अपलोड करें",
           sizeExceeded: "छवि का आकार 5MB से कम होना चाहिए",
           aadhaarInvalidFormat: "कृपया आधार के लिए एक मान्य छवि या पीडीएफ अपलोड करें।",
-          aadhaarSizeExceeded: "आधार फ़ाइल का आकार 5MB से कम होना चाहिए"
-        }
+          aadhaarSizeExceeded: "आधार फ़ाइल का आकार 5MB से कम होना चाहिए"        }
 
   },
   mr: {
@@ -1251,7 +933,11 @@ export const translations = {
       error: "त्रुटी",
       success: "यश",
       continue: "पुढे जा",
-
+      totalJobs: "एकूण नोकऱ्या",
+      rating: "रेटिंग",
+      totalEarned: "एकूण कमाई",
+      jobsForYou: "तुमच्यासाठी नोकऱ्या",
+      jobTypes: "नोकरीचे प्रकार",
       // Auth
       phoneLogin: 'फोन लॉगिन',
       enterPhone: 'फोन नंबर टाका',
@@ -1360,8 +1046,8 @@ export const translations = {
     // Profile
     personalInfo: 'वैयक्तिक माहिती',
     uploadNewPicture: "नवीन फोटो अपलोड करा",
-    "email": "ईमेल",
-  "emailPlaceholder": "तुमचा ईमेल टाका",
+    email: "ईमेल",
+  emailPlaceholder: "तुमचा ईमेल टाका",
     name: 'नाव',
     phone: 'फोन',
     certifications: 'प्रमाणपत्रे',
@@ -1389,8 +1075,8 @@ export const translations = {
     language: 'भाषा',
     select_language_to_continue: "जारी ठेवण्यासाठी भाषा निवडा",
     choose_language: "भाषा निवडा",
-"manageProfileDetails": "तुमचा प्रोफाइल तपशील व्यवस्थापित करा",
-  "viewPaymentHistory": "पेमेंट इतिहास पहा",
+manageProfileDetails: "तुमचा प्रोफाइल तपशील व्यवस्थापित करा",
+  viewPaymentHistory: "पेमेंट इतिहास पहा",
     theme: 'थीम',
     darkMode: 'डार्क मोड',
     lightMode: 'लाइट मोड',
@@ -1433,12 +1119,12 @@ export const translations = {
     remove:"हटवा",
     workerNotFound: "कामगार डेटा सापडला नाही",
     registerAgainPrompt: "कृपया अॅप वापरण्यासाठी पुन्हा नोंदणी करा",
-    "workerDataNotFound": "कामगार डेटा आढळला नाही",
-      "registerAgainMessage": "कृपया पुढे जाण्यासाठी पुन्हा नोंदणी करा",
+    workerDataNotFound: "कामगार डेटा आढळला नाही",
+      registerAgainMessage: "कृपया पुढे जाण्यासाठी पुन्हा नोंदणी करा",
 
-      "WorkerConnect": "वर्करकनेक्ट",
-      "tab": "टॅब",
-      "yourWorkPaymentsWillAppearHere": "तुमच्या कामाचे पेमेंट येथे दिसतील",
+      WorkerConnect: "वर्करकनेक्ट",
+      tab: "टॅब",
+      yourWorkPaymentsWillAppearHere: "तुमच्या कामाचे पेमेंट येथे दिसतील",
     registerNow: "आता नोंदणी करा",
     
      workerRegistration: {
@@ -1633,16 +1319,16 @@ export const translations = {
       newsletterSubtitle: "नवीनतम नोकरीच्या संधी आणि प्लॅटफॉर्म अद्यतने तुमच्या फोनवर मिळवा",
       subscribe: "सदस्यता घ्या",
       copyright: "© २०२४ वर्करकनेक्ट। सर्व हक्क राखीव.",
-  }
+  }}
 }
 };
 
 type DeepKeys<T> = T extends object ? {
-  [K in keyof T]: K extends string
-  ? T[K] extends object
-  ? `${K}.${DeepKeys<T[K]>}`
-  : K
-  : never
+  [K in keyof T]: K extends string 
+    ? T[K] extends object 
+      ? `${K}.${DeepKeys<T[K]>}` 
+      : K
+    : never
 }[keyof T] : never;
 
 export type Language = 'en' | 'hi' | 'mr';

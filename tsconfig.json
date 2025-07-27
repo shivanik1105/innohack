@@ -5,24 +5,16 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
-    "baseUrl": "src",
-    "paths": {
-      "@/*": ["./*"]
-    }
-  },
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"]
-    }
-  },
-  "compilerOptions": {
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
-    "target": "es6"
+    "target": "es6",
+     "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
   }
 }
