@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, MapPin, Briefcase, Camera,
-  ChevronRight, Check, ArrowRight
+  ChevronRight, Check, ArrowRight, CreditCard
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Worker } from '../types/worker';
@@ -27,9 +27,12 @@ interface FormData {
   name: string;
   age: string;
   pinCode: string;
+  aadhaarNumber: string;
   workerType: 'daily' | 'skilled' | '';
+  gender: 'male' | 'female' | 'other' | '';
   jobTypes: string[];
   photo: File | null;
+  aadhaar: File | null;
   isAvailableToday: boolean;
 }
 
@@ -40,8 +43,6 @@ const jobCategories = {
     { id: 'cleaner', name: 'Cleaner' },
     { id: 'laborer', name: 'Laborer' }
   ],
-  
-  
   skilled: [
     { id: 'plumber', name: 'Plumber' },
     { id: 'electrician', name: 'Electrician' },
@@ -71,10 +72,13 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
   const [formData, setFormData] = useState<FormData>({
     name: '',
     age: '',
+    gender: '',
     pinCode: '',
+    aadhaarNumber: '',
     workerType: '',
     jobTypes: [],
     photo: null,
+    aadhaar: null,
     isAvailableToday: true,
   });
 
@@ -109,6 +113,21 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
     }
   };
 
+  const handleAadhaarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.type.startsWith('image/') && !file.type.startsWith('application/pdf')) {
+        alert(t('workerRegistration.errors.aadhaarInvalidFormat'));
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert(t('workerRegistration.errors.aadhaarSizeExceeded'));
+        return;
+      }
+      setFormData(prev => ({ ...prev, aadhaar: file }));
+    }
+  };
+
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
       alert(t('workerRegistration.validation.nameRequired'));
@@ -125,6 +144,10 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
     }
     if (!/^\d{6}$/.test(formData.pinCode)) {
       alert(t('workerRegistration.validation.pinInvalid'));
+      return false;
+    }
+    if (!/^\d{12}$/.test(formData.aadhaarNumber)) {
+      alert(t('workerRegistration.validation.aadhaarInvalid'));
       return false;
     }
     if (!formData.workerType) {
@@ -149,15 +172,28 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
     setIsSubmitting(true);
 
     try {
-      const base64Photo = await fileToBase64(formData.photo);
+      const [base64Photo, base64Aadhaar] = await Promise.all([
+        fileToBase64(formData.photo),
+        formData.aadhaar ? fileToBase64(formData.aadhaar) : Promise.resolve(null)
+      ]);
 
       const workerData: Worker = {
+        id: crypto.randomUUID(),
+        phoneNumber: phoneNumber,
         name: formData.name,
-        phone: phoneNumber,
-        experience: parseInt(formData.age),
+        age: parseInt(formData.age),
+        pinCode: formData.pinCode,
+        aadhaarNumber: formData.aadhaarNumber,
+        photo: base64Photo,
+        aadhaarCardImage: base64Aadhaar,
+        workerType: formData.workerType,
+        isAvailableToday: formData.isAvailableToday,
         jobTypes: formData.jobTypes,
-        location: formData.pinCode,
-        photoUrl: base64Photo,
+        rating: 0,
+        totalJobs: 0,
+        verificationStatus: 'pending',
+        createdAt: new Date().toISOString(),
+        language: language,
       };
 
       if (onComplete) {
@@ -165,7 +201,14 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
       }
 
       setShowSuccess(true);
-      setTimeout(() => navigate('/dashboard'), 2000);
+
+      setTimeout(() => {
+        navigate('/dashboard', { 
+          state: { 
+            worker: workerData 
+          } 
+        });
+      }, 2000);
     } catch (error) {
       console.error('Registration failed:', error);
       alert(t('workerRegistration.errors.registrationFailed'));
@@ -191,13 +234,15 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
   const isFormIncomplete = 
     !formData.name || 
     !formData.age || 
+    !formData.gender ||
     !formData.pinCode ||
+    !formData.aadhaarNumber ||
     !formData.workerType ||
     formData.jobTypes.length === 0 ||
     !formData.photo;
 
   return (
-    <div className="bg-gradient-to-tr from-[#fdfbfb] to-[#ebedee] min-h-[100dvh] flex items-center justify-center px-6">
+    <div className="bg-gradient-to-tr from-[#fdfbfb] to-[#ebedee] min-h-screen flex items-center justify-center p-4">
       <AnimatePresence>
         {showSuccess && (
           <motion.div 
@@ -227,13 +272,13 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl w-full">
-        {/* Left Panel - Navigation */}
+      <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
+        {/* Left Panel - Navigation (30%) */}
         <motion.div 
           initial="hidden"
           animate="visible"
           variants={cardVariants}
-          className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+          className="w-full lg:w-[30%] bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
         >
           <h1 className="text-2xl font-bold text-gray-900 mb-6">{t("workerRegistration.title")}</h1>
           <h2 className="text-lg font-semibold text-gray-800 mb-4">{t("workerRegistration.stepsTitle")}</h2>
@@ -257,13 +302,13 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
           </div>
         </motion.div>
 
-        {/* Middle Panel - Form Input */}
+        {/* Middle Panel - Form Input (40%) */}
         <motion.div 
           initial="hidden"
           animate="visible"
           variants={cardVariants}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+          className="w-full lg:w-[40%] bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
         >
           <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('workerRegistration.personalInfo.title')}</h2>
           
@@ -318,6 +363,49 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                     />
                   </motion.div>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('workerRegistration.personalInfo.gender')}
+                  </label>
+                  <motion.div whileHover={{ scale: 1.01 }}>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        gender: e.target.value as 'male' | 'female' | 'other' | ''
+                      }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      required
+                    >
+                      <option value="">{t('workerRegistration.personalInfo.selectGender')}</option>
+                      <option value="male">{t('workerRegistration.personalInfo.male')}</option>
+                      <option value="female">{t('workerRegistration.personalInfo.female')}</option>
+                    </select>
+                  </motion.div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('workerRegistration.personalInfo.aadhaarNumber')}
+                  </label>
+                  <motion.div whileHover={{ scale: 1.01 }}>
+                    <input
+                      type="text"
+                      value={formData.aadhaarNumber}
+                      onChange={(e) => setFormData(prev => ({ 
+                        ...prev, 
+                        aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) 
+                      }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                      placeholder={t('workerRegistration.personalInfo.aadhaarPlaceholder')}
+                      maxLength={12}
+                      required
+                    />
+                  </motion.div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {t('workerRegistration.personalInfo.aadhaarDescription')}
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -365,25 +453,46 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       : t('workerRegistration.workType.selectSkilled')}
                   </h4>
                   <div className="flex flex-wrap gap-2">
+<<<<<<< HEAD
                     {(jobCategories[formData.workerType] || []).map((job) => (
-                      
                       <motion.button
-  key={job.id}
-  whileHover={buttonHover}
-  whileTap={buttonTap}
-  onClick={() => handleJobTypeToggle(job.id)}
-  className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-    formData.jobTypes.includes(job.id)
-      ? 'bg-blue-600 text-white hover:bg-blue-700'
-      : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-  }`}
->
-  {t(`workerRegistration.jobTypes.${job.id}`)}
-</motion.button>
-
+                        key={job.id}
+                        whileHover={buttonHover}
+                        whileTap={buttonTap}
+                        onClick={() => handleJobTypeToggle(job.id)}
+                        className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                          formData.jobTypes.includes(job.id)
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                        }`}
+                      >
+                        {t(`workerRegistration.jobTypes.${job.id}`)}
+                      </motion.button>
                     ))}
+=======
+                    {(jobCategories[formData.workerType] || []).map((job) => {
+                      console.log(`Translating: ${job.id}`, t(job.id));
+                      return (
+                        <motion.button
+                          key={job.id}
+                          whileHover={buttonHover}
+                          whileTap={buttonTap}
+                          onClick={() => handleJobTypeToggle(job.id)}
+                          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                            formData.jobTypes.includes(job.id)
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                          }`}
+                        >
+                          {t(job.id)}
+                        </motion.button>
+                      );
+                    })}
+>>>>>>> f0872ccf35385a77a02f3128e31aa4162f5c8ae6
                   </div>
+                
                 </div>
+                
               )}
             </div>
                         
@@ -417,16 +526,45 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                 </motion.span>
               )}
             </div>
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-medium text-gray-800 mb-4">{t('workerRegistration.aadhaar.title')}</h3>
+
+              <input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleAadhaarUpload}
+                className="hidden"
+                id="aadhaar-input"
+              />
+              <motion.label
+                whileHover={buttonHover}
+                whileTap={buttonTap}
+                htmlFor="aadhaar-input"
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium cursor-pointer hover:bg-blue-700 transition-colors"
+              >
+                <Camera className="w-5 h-5 mr-2" />
+                {t('workerRegistration.aadhaar.upload')}
+              </motion.label>
+              {formData.aadhaar && (
+                <motion.span 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="ml-3 text-sm text-green-600 flex items-center"
+                >
+                  <Check className="w-4 h-4 mr-1" /> {t('workerRegistration.aadhaar.uploaded')}
+                </motion.span>
+              )}
+            </div>
           </div>
         </motion.div>
 
-        {/* Right Panel - Preview */}
+        {/* Right Panel - Preview (30%) */}
         <motion.div 
           initial="hidden"
           animate="visible"
           variants={cardVariants}
           transition={{ delay: 0.2 }}
-          className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
+          className="w-full lg:w-[30%] bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
         >
           <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('workerRegistration.preview.title')}</h2>
           
@@ -442,6 +580,19 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
               {formData.pinCode && (
                 <p className="text-gray-700">{t('workerRegistration.personalInfo.pinCode')}: {formData.pinCode}</p>
               )}
+              {formData.aadhaarNumber && (
+                <p className="text-gray-700 flex items-center">
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  {t('workerRegistration.personalInfo.aadhaarNumber')}: 
+                  {formData.aadhaarNumber.substring(0, 4)}-XXXX-XXXX-{formData.aadhaarNumber.substring(8)}
+                </p>
+              )}
+              {formData.gender && (
+              <p className="text-gray-700">
+                {t('workerRegistration.personalInfo.gender')}: {t(`workerRegistration.personalInfo.${formData.gender}`)}
+              </p>
+            )}
+
             </div>
             
             <div className="border-b pb-4">

@@ -5,6 +5,11 @@ export interface Worker {
   age: number;
   pinCode: string;
   photo?: string;
+  gender?: 'male' | 'female' | string;
+  aadhaarNumber: string;
+  aadhaarCardImage: string | null | undefined;
+  email?: string;
+  dateOfBirth?: string;
   workerType: 'daily' | 'skilled';
   isAvailableToday: boolean;
   jobTypes: string[];
