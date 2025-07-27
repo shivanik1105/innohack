@@ -24,7 +24,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Worker, Job } from '../types/worker';
 import LocationSelector from './LocationSelector';
 import { useLanguage } from '../hooks/useLanguage';
-import { TranslationKey } from '/Users/janhvi/innohack1/innohack/src/utils/translations.ts';
+import { TranslationKey } from 'C:/Users/shivani/OneDrive/Desktop/innohack_card/project/src/utils/translations.ts';
 import { useTranslation } from 'react-i18next';
 
 interface WorkerDashboardProps {
