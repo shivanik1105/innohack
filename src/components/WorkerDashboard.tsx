@@ -289,7 +289,7 @@ if (!worker) {
                     {item.icon}
                   </span>
                   <span className="font-medium">{t(`sidebar.${item.label}`)}</span>
-                  {item.notification && (
+                  {item.notification !== undefined && (
                     <span className="ml-auto bg-amber-400 text-indigo-900 text-xs font-bold px-2 py-0.5 rounded-full">
                       {item.notification}
                     </span>
