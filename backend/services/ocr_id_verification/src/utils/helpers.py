@@ -1,14 +1,14 @@
-# def load_image(image_path):
-#     import cv2
-#     image = cv2.imread(image_path)
-#     return image
+def load_image(image_path):
+    import cv2
+    image = cv2.imread(image_path)
+    return image
 
-# def preprocess_image(image):
-#     import cv2
-#     gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-#     blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
-#     _, thresholded_image = cv2.threshold(blurred_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-#     return 
+def preprocess_image(image):
+    import cv2
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred_image = cv2.GaussianBlur(gray_image, (5, 5), 0)
+    _, thresholded_image = cv2.threshold(blurred_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return 
 
 # import cv2
 # import numpy as np

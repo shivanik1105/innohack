@@ -1,17 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import { ChevronDown, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import i18n from '../i18n';
+import { Language } from '../utils/translations';
 
-type Language = 'mr' | 'hi' | 'en';
+interface LanguageSelectorProps {
+  currentLanguage: Language;
+  onLanguageChange: (lang: Language) => void;
+}
 
-const LanguageSelector: React.FC = () => {
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ currentLanguage, onLanguageChange }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState<Language>('en');
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(currentLanguage);
   const navigate = useNavigate();
-  const location = useLocation();
 
   const languages = [
     { code: 'mr' as Language, name: 'मराठी', flag: '🇮🇳' },
@@ -20,21 +23,22 @@ const LanguageSelector: React.FC = () => {
   ];
 
   useEffect(() => {
-    const storedLang = (localStorage.getItem('appLanguage') as Language) || (i18n.language as Language) || 'en';
-    setSelectedLanguage(storedLang);
-    i18n.changeLanguage(storedLang);
-  }, []);
+    const storedLang = localStorage.getItem('appLanguage') as Language;
+    const langToSet = storedLang || currentLanguage || 'en';
+    setSelectedLanguage(langToSet);
+    i18n.changeLanguage(langToSet);
+    onLanguageChange(langToSet);
+  }, [currentLanguage, onLanguageChange]);
 
-  const handleLanguageChange = (language: Language) => {
-    setSelectedLanguage(language);
-    i18n.changeLanguage(language);
-    localStorage.setItem('appLanguage', language);
+  const handleLanguageChange = (lang: Language) => {
+    setSelectedLanguage(lang);
+    i18n.changeLanguage(lang);
+    localStorage.setItem('appLanguage', lang);
+    onLanguageChange(lang);
     setIsOpen(false);
 
-    // ✅ Return to the previous page after a short delay (for smooth transition)
-    setTimeout(() => {
-      navigate(-1); // Go back to the previous screen
-    }, 300);
+    // Navigate back or to home after selecting
+    setTimeout(() => navigate(-1), 300);
   };
 
   const selectedLang = languages.find((lang) => lang.code === selectedLanguage);
@@ -48,7 +52,6 @@ const LanguageSelector: React.FC = () => {
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('choose_language')}</h1>
         <p className="text-gray-600 mb-6">{t('select_language_to_continue')}</p>
 
-        {/* Language Selector Button */}
         <div className="relative inline-block text-left w-full">
           <button
             type="button"
@@ -67,21 +70,13 @@ const LanguageSelector: React.FC = () => {
               <span className="text-blue-500">{t('choose_language')}</span>
             )}
             <ChevronDown
-              className={`w-5 h-5 ml-2 transition-transform duration-200 ${
-                isOpen ? 'rotate-180' : ''
-              }`}
+              className={`w-5 h-5 ml-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
             />
           </button>
 
-          {/* Dropdown */}
           {isOpen && (
-            <div
-              className="absolute left-0 right-0 z-20 mt-2 bg-white rounded-xl shadow-lg border border-blue-200 ring-1 ring-blue-100 focus:outline-none animate-fadeIn"
-              role="menu"
-              aria-orientation="vertical"
-              aria-labelledby="language-menu"
-            >
-              <div className="py-1" role="none">
+            <div className="absolute left-0 right-0 z-20 mt-2 bg-white rounded-xl shadow-lg border border-blue-200 ring-1 ring-blue-100 focus:outline-none animate-fadeIn">
+              <div className="py-1">
                 {languages.map((language) => (
                   <button
                     key={language.code}
@@ -91,7 +86,6 @@ const LanguageSelector: React.FC = () => {
                         ? 'bg-blue-50 text-blue-600 font-semibold'
                         : 'text-blue-500 hover:bg-blue-50'
                     }`}
-                    role="menuitem"
                   >
                     <span className="mr-2 text-xl">{language.flag}</span>
                     {language.name}

@@ -1,25 +1,21 @@
-# class OcrProcessor:
-#     def process_image(self, image_path):
-#         import cv2
-#         from utils.helpers import load_image, preprocess_image
-        
-#         image = load_image(image_path)
-#         processed_image = preprocess_image(image)
-#         return processed_image
-
-#     def extract_text(self, image):
-#         import pytesseract
-        
-#         text = pytesseract.image_to_string(image)
-#         return text.strip()
-# from utils.helpers import preprocess_image_from_streamlit
-
-# def process_image(uploaded_file):
-#     return preprocess_image_from_streamlit(uploaded_file)
-
-from utils.helpers import preprocess_image_from_streamlit
+from services.ocr_id_verification.src.utils.helpers import preprocess_image_from_streamlit
 import easyocr
 import re
+class OcrService:
+    def process_image(self, image_path):
+        import cv2
+        from utils.helpers import load_image, preprocess_image
+        
+        image = load_image(image_path)
+        processed_image = preprocess_image(image)
+        return processed_image
+
+    def extract_text(self, image):
+        import pytesseract
+        
+        text = pytesseract.image_to_string(image)
+        return text.strip()
+
 
 reader = easyocr.Reader(['en'])
 
@@ -28,7 +24,9 @@ def process_image(uploaded_file):
 
 def extract_text_from_image(image):
     results = reader.readtext(image, detail=0)
-    full_text = "\n".join(results)
+    # Ensure all items are strings (in case of unexpected data)
+    results = [str(item) for item in results if item is not None]
+    full_text = " \n ".join(results)
     return full_text
 
 def extract_id_fields(text):
