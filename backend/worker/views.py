@@ -14,6 +14,9 @@ from services.ocr_id_verification.src.verification.verifier import IdVerifier
 from services.bluecollar_recommender.recommender import recommender as recommend_jobs
 from services.wage_recommendation_app.src.model.recommender import WageRecommender
 
+from .sms_util import send_otp_via_fast2sms, generate_otp, cache_otp,verify_otp_in_cache
+from .models import User
+from .serializers import UserSerializer
 # In your worker/views.py file
 
 # ... (add this with your other imports)
@@ -21,89 +24,76 @@ import requests
 import json
 from django.conf import settings
 
-# --- 2FACTOR.IN OTP AUTHENTICATION ---
-
-# IMPORTANT: Store your 2Factor API Key securely.
-# The best way is to use environment variables.
-TWO_FACTOR_API_KEY = 'YOUR_2FACTOR_API_KEY_HERE' # Replace with your actual key
-
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def send_otp_2factor(request):
-    """
-    Sends an OTP to the user's phone number using the 2Factor.in API.
-    """
+def send_otp(request):
+    """Send OTP to user's phone"""
     phone_number = request.data.get('phoneNumber')
-    if not phone_number or len(phone_number) != 10:
-        return Response({'error': 'A valid 10-digit phone number is required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Construct the URL for the 2Factor API
-    url = f"https://2factor.in/API/V1/{TWO_FACTOR_API_KEY}/SMS/+91{phone_number}/AUTOGEN"
     
-    try:
-        response = requests.get(url)
-        response_data = response.json()
+    # Validate phone number
+    if not phone_number or len(phone_number) != 10 or not phone_number.isdigit():
+        return Response(
+            {'error': 'Invalid phone number. 10 digits required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    otp = generate_otp()
+    cache_otp(phone_number, otp)
+    
+    # In development, print OTP to console instead of sending SMS
+    if settings.DEBUG:
+        print(f"OTP for {phone_number}: {otp}")
+        return Response({'status': 'success', 'message': 'OTP generated (dev mode)'})
+    
+    # In production, send actual SMS
+    result = send_otp_via_fast2sms(phone_number, otp)
+    
+    if result['status'] == 'success':
+        return Response(result)
+    return Response(
+        {'error': result['message']},
+        status=status.HTTP_500_INTERNAL_SERVER_ERROR
+    )
 
-        if response_data.get("Status") == "Success":
-            # The session_id is what we'll use to verify the OTP later
-            session_id = response_data.get("Details")
-            return Response({'status': 'success', 'session_id': session_id})
-        else:
-            return Response({'error': 'Failed to send OTP.', 'details': response_data}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    except requests.exceptions.RequestException as e:
-        return Response({'error': f'API request failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def verify_otp_2factor(request):
-    """
-    Verifies the OTP entered by the user using the 2Factor.in API.
-    If successful, it creates or logs in the user.
-    """
-    session_id = request.data.get('session_id')
-    otp_code = request.data.get('otp')
-    phone_number = request.data.get('phoneNumber') # We need this to find the user
-
-    if not all([session_id, otp_code, phone_number]):
-        return Response({'error': 'Session ID, OTP, and phone number are required.'}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Construct the verification URL
-    url = f"https://2factor.in/API/V1/{TWO_FACTOR_API_KEY}/SMS/VERIFY/{session_id}/{otp_code}"
-
-    try:
-        response = requests.get(url)
-        response_data = response.json()
-
-        if response_data.get("Status") == "Success":
-            # OTP is correct. Now, find or create the user in our database.
-            # We use the full phone number with country code as the unique identifier.
-            full_phone_number = f"+91{phone_number}"
-            
-            user, created = User.objects.get_or_create(
-                phoneNumber=full_phone_number,
-                defaults={'uid': f'custom_{full_phone_number}'} # Create a custom UID
-            )
-
-            # TODO: Generate a JWT or another auth token here for the user
-            # For now, we'll just return the user data.
-            serializer = UserSerializer(user)
-            return Response({
-                'status': 'success',
-                'message': 'User authenticated successfully.',
-                'isNewUser': created,
-                'user': serializer.data,
-                # 'token': 'your_generated_jwt_token' # Add this later
-            })
-        else:
-            return Response({'error': 'Invalid OTP.', 'details': response_data}, status=status.HTTP_400_BAD_REQUEST)
-
-    except requests.exceptions.RequestException as e:
-        return Response({'error': f'API request failed: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-@api_view(['GET', 'PATCH'])
+def verify_otp(request):
+    """API endpoint to verify OTP"""
+    phone_number = request.data.get('phoneNumber')
+    otp = request.data.get('otp')
+    
+    # Input validation
+    if not all([phone_number, otp]):
+        return Response(
+            {'error': 'Phone number and OTP are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Business logic verification
+    if not verify_otp_in_cache(phone_number, otp):
+        return Response(
+            {'error': 'Invalid OTP or OTP expired'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Authentication successful - get or create user
+    full_phone_number = f"+91{phone_number}"
+    user, created = User.objects.get_or_create(
+        phoneNumber=full_phone_number,
+        defaults={
+            'username': f'user_{phone_number}',
+            'is_active': True
+        }
+    )
+    
+    serializer = UserSerializer(user)
+    return Response({
+        'status': 'success',
+        'user': serializer.data,
+        'is_new_user': created
+    })@api_view(['GET', 'PATCH'])
 def user_profile_view(request, uid):
     if request.method == 'GET':
         try:

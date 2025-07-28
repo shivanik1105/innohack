@@ -7,6 +7,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { Worker } from '../types/worker';
 import { useTranslation } from 'react-i18next';
+import i18n from "i18next";
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -274,7 +275,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
 
       <div className="w-full max-w-7xl mx-auto flex flex-col lg:flex-row gap-6">
         {/* Left Panel - Navigation (30%) */}
-        <motion.div 
+        {/* <motion.div 
           initial="hidden"
           animate="visible"
           variants={cardVariants}
@@ -300,7 +301,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
               ))}
             </ul>
           </div>
-        </motion.div>
+        </motion.div> */}
 
         {/* Middle Panel - Form Input (40%) */}
         <motion.div 
@@ -363,6 +364,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                     />
                   </motion.div>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('workerRegistration.personalInfo.gender')}
@@ -380,6 +382,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       <option value="">{t('workerRegistration.personalInfo.selectGender')}</option>
                       <option value="male">{t('workerRegistration.personalInfo.male')}</option>
                       <option value="female">{t('workerRegistration.personalInfo.female')}</option>
+                      <option value="other">{t('workerRegistration.personalInfo.other')}</option>
                     </select>
                   </motion.div>
                 </div>
@@ -468,28 +471,8 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                         {t(`${job.id}`)}
                       </motion.button>
                     ))}
-                    {(jobCategories[formData.workerType] || []).map((job) => {
-                      console.log(`Translating: ${job.id}`, t(job.id));
-                      return (
-                        <motion.button
-                          key={job.id}
-                          whileHover={buttonHover}
-                          whileTap={buttonTap}
-                          onClick={() => handleJobTypeToggle(job.id)}
-                          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                            formData.jobTypes.includes(job.id)
-                              ? 'bg-blue-600 text-white hover:bg-blue-700'
-                              : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                          }`}
-                        >
-                          {t(job.id)}
-                        </motion.button>
-                      );
-                    })}
                   </div>
-                
                 </div>
-                
               )}
             </div>
                         
@@ -523,6 +506,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                 </motion.span>
               )}
             </div>
+
             <div className="border-t pt-6">
               <h3 className="text-lg font-medium text-gray-800 mb-4">{t('workerRegistration.aadhaar.title')}</h3>
 
@@ -585,11 +569,10 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                 </p>
               )}
               {formData.gender && (
-              <p className="text-gray-700">
-                {t('Gender')}: {t(`${formData.gender}`)}
-              </p>
-            )}
-
+                <p className="text-gray-700">
+                  {t('Gender')}: {t(`${formData.gender}`)}
+                </p>
+              )}
             </div>
             
             <div className="border-b pb-4">
@@ -617,7 +600,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                           whileHover={{ scale: 1.05 }}
                           className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
                         >
-                          {t(`.${job.id}`)}
+                          {t(`${job.id}`)}
                         </motion.span>
                       ) : null;
                     })}

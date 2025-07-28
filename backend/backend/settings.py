@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+FAST2SMS_API_KEY = os.getenv('FAST2SMS_API_KEY')
+FAST2SMS_SENDER_ID = os.getenv('FAST2SMS_SENDER_ID')
+OTP_EXPIRY_SECONDS = os.getenv('OTP_EXPIRY_MINUTES')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 

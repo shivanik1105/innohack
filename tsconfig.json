@@ -11,10 +11,14 @@
     "moduleResolution": "node",
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
-    "target": "es6",
+    "target1": "es6",
      "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]
+    },
+    "target": "es6","baseUrl": "src",
+    "paths": {
+      "@/*": ["./*"]
     }
   }
 }
