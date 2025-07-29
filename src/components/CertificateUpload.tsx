@@ -75,10 +75,13 @@ export default function CertificateUpload({
   const fetchCertificatesFromDB = async () => {
     try {
       const API_BASE_URL = 'http://127.0.0.1:8000';
+      console.log('🔍 Fetching certificates for userId:', userId); // Debug log
       const response = await fetch(`${API_BASE_URL}/api/users/${userId}/certificates/`);
+      console.log('📡 Certificates API response status:', response.status); // Debug log
+
       if (response.ok) {
         const data = await response.json();
-        console.log('Certificates response:', data); // Debug log
+        console.log('📋 Certificates response data:', data); // Debug log
         if (data.status === 'success') {
           const dbCertificates = data.certificates.map((cert: any) => ({
             id: cert.id.toString(),
@@ -90,21 +93,32 @@ export default function CertificateUpload({
             uploadedAt: cert.uploadedAt,
             verifiedAt: cert.verifiedAt
           }));
-          console.log('Mapped certificates:', dbCertificates); // Debug log
+          console.log('✅ Mapped certificates:', dbCertificates); // Debug log
+          console.log('📊 Certificate count:', dbCertificates.length); // Debug log
           onUpdate(dbCertificates);
+        } else {
+          console.log('⚠️ API returned non-success status:', data.status); // Debug log
         }
       } else {
-        console.error('Failed to fetch certificates:', response.status, response.statusText);
+        const errorText = await response.text();
+        console.error('❌ Failed to fetch certificates:', response.status, response.statusText, errorText);
       }
     } catch (error) {
-      console.error('Failed to fetch certificates:', error);
+      console.error('🚨 Error fetching certificates:', error);
     }
   };
 
   // Fetch certificates on component mount
   React.useEffect(() => {
+    console.log('🚀 CertificateUpload component mounted with userId:', userId); // Debug log
+    console.log('📦 Initial certificates prop:', certificates); // Debug log
     fetchCertificatesFromDB();
   }, [userId]);
+
+  // Debug log when certificates prop changes
+  React.useEffect(() => {
+    console.log('🔄 Certificates prop updated:', certificates); // Debug log
+  }, [certificates]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

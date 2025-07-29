@@ -186,14 +186,14 @@ export default function BlueCollarRegistration({ phoneNumber, onComplete }: Blue
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
+                  Full Name (according to Aadhaar card)*
                 </label>
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your full name (as per Aadhaar card)"
                   required
                 />
                 <VoiceButton

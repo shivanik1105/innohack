@@ -98,6 +98,7 @@ export default function WorkerRegistration({ phoneNumber, userId, onComplete, la
   }, [formData]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [customJobType, setCustomJobType] = useState('');
   const [showCustomJobInput, setShowCustomJobInput] = useState(false);
@@ -160,13 +161,11 @@ export default function WorkerRegistration({ phoneNumber, userId, onComplete, la
 
       // Verify name on Aadhaar matches entered name
       if (formData.name.trim()) {
-        // Set the file immediately so user sees it's uploaded
-        console.log('📁 Setting Aadhaar file immediately...'); // Debug log
-        setFormData(prev => ({ ...prev, aadhaar: file }));
+        // Start verification process - don't set file yet
+        setIsVerifying(true);
+        console.log('🔄 Starting Aadhaar verification...'); // Debug log
 
         try {
-          console.log('🔄 Starting Aadhaar verification...'); // Debug log
-
           const formDataForVerification = new FormData();
           formDataForVerification.append('aadhaar_image', file);
           formDataForVerification.append('name', formData.name);
@@ -186,36 +185,60 @@ export default function WorkerRegistration({ phoneNumber, userId, onComplete, la
               if (result.verification_status === 'verified') {
                 // Extract Aadhaar number and name from OCR
                 const extractedData = result.extracted_data || {};
-                console.log('✅ Setting formData with Aadhaar file...'); // Debug log
+                console.log('✅ Verification successful! Setting Aadhaar file...'); // Debug log
+                console.log('📋 Extracted data:', extractedData); // Debug log
+                console.log('🔢 Aadhaar number:', extractedData.aadhaar_number); // Debug log
+
+                // Only set file after successful verification
                 setFormData(prev => ({
                   ...prev,
                   aadhaar: file,
                   extractedAadhaarNumber: extractedData.aadhaar_number || '',
                   extractedName: extractedData.name || ''
                 }));
+
+                setIsVerifying(false);
                 alert('✅ Aadhaar verified successfully! Name matches.');
               } else {
-                console.log('⚠️ Setting formData with Aadhaar file (verification pending)...'); // Debug log
-                alert('⚠️ Aadhaar uploaded but name verification failed. Please ensure the name matches your Aadhaar card.');
-                setFormData(prev => ({ ...prev, aadhaar: file }));
+                console.log('⚠️ Partial verification - setting file...'); // Debug log
+
+                // Set file for partial verification too
+                setFormData(prev => ({
+                  ...prev,
+                  aadhaar: file,
+                  extractedAadhaarNumber: result.extracted_data?.aadhaar_number || '',
+                  extractedName: result.extracted_data?.name || ''
+                }));
+
+                setIsVerifying(false);
+                alert('⚠️ Aadhaar uploaded but name verification needs review. Please ensure the name matches your Aadhaar card.');
               }
             } else {
               console.log('❌ Verification failed:', result.error); // Debug log
+              setIsVerifying(false);
               alert('❌ Aadhaar verification failed: ' + (result.error || 'Unknown error'));
-              // Still set the file so user can see it's uploaded
-              setFormData(prev => ({ ...prev, aadhaar: file }));
+              // Don't set the file if verification completely failed
             }
           } else {
             const errorResult = await response.json().catch(() => ({ error: 'Network error' }));
-            console.log('🌐 Network error:', errorResult); // Debug log
-            alert('❌ Aadhaar verification failed: ' + (errorResult.error || 'Server error'));
-            // Still set the file so user can see it's uploaded
-            setFormData(prev => ({ ...prev, aadhaar: file }));
+            console.log('🌐 Server response:', errorResult); // Debug log
+            setIsVerifying(false);
+
+            // Handle specific verification failures
+            if (errorResult.verification_status === 'name_mismatch') {
+              alert('❌ Name Verification Failed: ' + errorResult.message);
+            } else if (errorResult.verification_status === 'failed') {
+              alert('❌ Aadhaar Verification Failed: ' + (errorResult.message || 'Could not process Aadhaar card'));
+            } else {
+              alert('❌ Aadhaar verification failed: ' + (errorResult.error || errorResult.message || 'Server error'));
+            }
+            // Don't set the file if there's a verification error
           }
         } catch (error) {
           console.error('🚨 Aadhaar verification error:', error);
-          alert('⚠️ Could not verify Aadhaar automatically. Please ensure the name matches your Aadhaar card.');
-          setFormData(prev => ({ ...prev, aadhaar: file }));
+          setIsVerifying(false);
+          alert('❌ Error during verification. Please try again.');
+          // Don't set the file if there's an error
         }
       } else {
         alert('Please enter your name first before uploading Aadhaar card.');
@@ -239,10 +262,6 @@ export default function WorkerRegistration({ phoneNumber, userId, onComplete, la
     }
     if (!/^\d{6}$/.test(formData.pinCode)) {
       alert(t('workerRegistration.validation.pinInvalid'));
-      return false;
-    }
-    if (!formData.extractedAadhaarNumber || !/^\d{12}$/.test(formData.extractedAadhaarNumber)) {
-      alert('Please upload a valid Aadhaar card first');
       return false;
     }
     if (!formData.workerType) {
@@ -333,6 +352,20 @@ export default function WorkerRegistration({ phoneNumber, userId, onComplete, la
     !formData.workerType ||
     formData.jobTypes.length === 0 ||
     !formData.photo;
+
+  // Debug logging for form completion
+  console.log('🔍 Form validation check:', {
+    name: !!formData.name,
+    age: !!formData.age,
+    gender: !!formData.gender,
+    pinCode: !!formData.pinCode,
+    extractedAadhaarNumber: !!formData.extractedAadhaarNumber,
+    extractedAadhaarNumberValue: formData.extractedAadhaarNumber,
+    workerType: !!formData.workerType,
+    jobTypes: formData.jobTypes.length > 0,
+    photo: !!formData.photo,
+    isFormIncomplete
+  });
 
   return (
     <div className="bg-gradient-to-tr from-[#fdfbfb] to-[#ebedee] min-h-screen flex items-center justify-center p-4">
@@ -665,17 +698,36 @@ export default function WorkerRegistration({ phoneNumber, userId, onComplete, la
                 onChange={handleAadhaarUpload}
                 className="hidden"
                 id="aadhaar-input"
+                disabled={isVerifying}
               />
               <motion.label
                 whileHover={buttonHover}
                 whileTap={buttonTap}
                 htmlFor="aadhaar-input"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium cursor-pointer hover:bg-blue-700 transition-colors"
+                className={`inline-flex items-center px-4 py-2 rounded-lg font-medium cursor-pointer transition-colors ${
+                  isVerifying
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                } text-white`}
               >
                 <Camera className="w-5 h-5 mr-2" />
-                {t('workerRegistration.aadhaar.upload')}
+                {isVerifying ? 'Verifying...' : t('workerRegistration.aadhaar.upload')}
               </motion.label>
-              {formData.aadhaar && (
+
+              {/* Show verification status */}
+              {isVerifying && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="ml-3 text-sm text-blue-600 flex items-center bg-blue-50 px-3 py-1 rounded-full border border-blue-200"
+                >
+                  <div className="w-4 h-4 mr-2 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span className="font-medium">Verifying Aadhaar...</span>
+                </motion.div>
+              )}
+
+              {/* Show success status only after verification */}
+              {!isVerifying && formData.aadhaar && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}

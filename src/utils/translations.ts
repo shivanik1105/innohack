@@ -193,7 +193,7 @@ export const translations = {
         personalInfo: {
           title: "Personal Information",
           description: "Please provide your personal details",
-          name: "Full Name",
+          name: "Full Name (according to Aadhaar card)",
           age: "Age",
           pinCode: "PIN Code",
           gender: "Gender",
@@ -204,7 +204,7 @@ export const translations = {
           aadhaarNumber: "Aadhaar Number",
           aadhaarPlaceholder: "Enter 12-digit Aadhaar",
           aadhaarDescription: "Your data is secure.",
-          namePlaceholder: "Enter your full name",
+          namePlaceholder: "Enter your full name (as per Aadhaar card)",
           agePlaceholder: "Enter your age",
           pinPlaceholder: "Enter 6-digit PIN code"
         },
@@ -543,7 +543,6 @@ export const translations = {
       certificates: 'प्रमाणपत्र',
       portfolio: 'पोर्टफोलियो',
       courses: 'कोर्स',
-      jobs: 'नौकरियां',
       aadhaarCardTitle: 'आधार कार्ड सत्यापन',
       available: 'उपलब्ध',
       busy: 'व्यस्त',
@@ -622,7 +621,6 @@ export const translations = {
     buildFri: 'बिल्ड एफआरआई',
     fillSection: 'सेक्शन भरें',
     fillSectionDescription: 'उदाहरण के साथ कुछ डमी टेक्स्ट सेक्शन में लिखें।',
-    courses: 'पाठ्यक्रम',
     newSection: 'नया सेक्शन',
     resumeSettings: 'रिज्यूमे सेटिंग्स',
     resumeSettingsDescription: 'ऑनलाइन उपलब्ध हेरान इप्सम डमी टेक्स्ट के कई प्रकार हैं।',
@@ -1192,7 +1190,6 @@ export const translations = {
       certificates: 'प्रमाणपत्रे',
       portfolio: 'पोर्टफोलिओ',
       courses: 'अभ्यासक्रम',
-      jobs: 'नोकऱ्या',
       aadhaarCardTitle: 'आधार कार्ड सत्यापन',
       available: 'उपलब्ध',
       busy: 'व्यस्त',
@@ -1249,7 +1246,6 @@ export const translations = {
     changePhoto: 'फोटो बदला',
     // Payments
     paymentLog: 'पेमेंट लॉग',
-        aadhaarCardTitle: "आधार कार्ड अपलोड करा",
     aadhaarCardSubtitle: "आधार कार्ड अपलोड करा",
     saveChanges:"बदल जतन करा",
 
@@ -1278,7 +1274,6 @@ manageProfileDetails: "तुमचा प्रोफाइल तपशील 
     buildFri: 'बिल्ड एफआरआई',
     fillSection: 'विभाग भरा',
     fillSectionDescription: 'उदाहरणासह काही डमी मजकूर विभागात लिहा.',
-    courses: 'अभ्यासक्रम',
     newSection: 'नवीन विभाग',
     resumeSettings: 'रिज्यूम सेटिंग्ज',
     resumeSettingsDescription: 'ऑनलाइन हेरान इप्सम डमी मजकूराचे अनेक प्रकार उपलब्ध आहेत.',

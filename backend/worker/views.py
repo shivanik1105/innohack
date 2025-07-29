@@ -14,41 +14,41 @@ OCR_AVAILABLE = False
 
 # Fallback mock service
 class MockOCRService:
-        def process_certificate_image(self, image_path, user_name=None):
-            # Mock OCR result with name verification
-            extracted_name = user_name if user_name else "Test Name"
-            name_match = True  # For testing, assume names match
+    def process_certificate_image(self, image_path, user_name=None):
+        # Mock OCR result with name verification
+        extracted_name = user_name if user_name else "Test Name"
+        name_match = True  # For testing, assume names match
 
-            return {
-                'success': True,
-                'extracted_text': f'Mock certificate text for {extracted_name}',
-                'certificate_data': {
-                    'name': extracted_name,
-                    'certificate_number': 'MOCK123',
-                    'issue_date': '2024-01-01',
-                    'issuer': 'Mock Institute'
-                },
-                'confidence': 0.9,
-                'verification_status': 'verified',
-                'name_verification': {
-                    'match': name_match,
-                    'confidence': 0.95,
-                    'extracted_name': extracted_name,
-                    'user_name': user_name or 'Test User',
-                    'reason': 'Names match (mock)',
-                    'similarity_scores': {
-                        'exact_match': 1.0,
-                        'fuzzy_ratio': 1.0,
-                        'fuzzy_partial': 1.0,
-                        'fuzzy_token_sort': 1.0,
-                        'fuzzy_token_set': 1.0,
-                        'sequence_matcher': 1.0
-                    }
+        return {
+            'success': True,
+            'extracted_text': f'Mock certificate text for {extracted_name}',
+            'certificate_data': {
+                'name': extracted_name,
+                'certificate_number': 'MOCK123',
+                'issue_date': '2024-01-01',
+                'issuer': 'Mock Institute'
+            },
+            'confidence': 0.9,
+            'verification_status': 'verified',
+            'name_verification': {
+                'match': name_match,
+                'confidence': 0.95,
+                'extracted_name': extracted_name,
+                'user_name': user_name or 'Test User',
+                'reason': 'Names match (mock)',
+                'similarity_scores': {
+                    'exact_match': 1.0,
+                    'fuzzy_ratio': 1.0,
+                    'fuzzy_partial': 1.0,
+                    'fuzzy_token_sort': 1.0,
+                    'fuzzy_token_set': 1.0,
+                    'sequence_matcher': 1.0
                 }
             }
+        }
 
-        def verify_certificate_authenticity(self, certificate_data):
-            return True, []
+    def verify_certificate_authenticity(self, certificate_data):
+        return True, []
 
 ocr_service = MockOCRService()
 
@@ -66,18 +66,30 @@ try:
     NOTIFICATION_AVAILABLE = True
 except ImportError:
     NOTIFICATION_AVAILABLE = False
-from services.wage_recommendation_app.src.model.recommender import WageRecommender
+# Wage recommendation service removed - using built-in recommendation engine
 
 from .sms_util import send_otp_via_fast2sms, generate_otp, cache_otp,verify_otp_in_cache
 from .recommendation_service import recommendation_service
 
 # Import Aadhaar verification service
 try:
-    # Temporarily disable for development
-    raise ImportError("Using mock Aadhaar verification")
-    from services.aadhaar_verification_service import aadhaar_verification_service
+    # Import your AI/ML OCR services
+    import sys
+    import os
+
+    # Add your OCR module to path
+    ocr_path = os.path.join(os.path.dirname(__file__), '..', '..', 'AIML', 'ocr-id-verification', 'src')
+    if ocr_path not in sys.path:
+        sys.path.append(ocr_path)
+
+    from ocr.processor import extract_text_from_image, extract_id_fields
+    from utils.helpers import preprocess_image_from_streamlit
+
     AADHAAR_VERIFICATION_AVAILABLE = True
-except ImportError:
+    print("✅ Your AI/ML OCR service loaded successfully with EasyOCR")
+except Exception as e:
+    print(f"⚠️ AI/ML OCR service not available: {e}")
+    print("Using mock OCR for testing")
     AADHAAR_VERIFICATION_AVAILABLE = False
 # In your worker/views.py file
 
@@ -310,8 +322,32 @@ def suggest_wage(request):
         experience = request.query_params.get('experience', 'fresher')
         if not job_title or not location:
             return Response({'error': 'Job title and pincode are required.'}, status=400)
-        recommender = WageRecommender()
-        suggested_wage = recommender.predict_wage(job_title, location, experience)
+        # Simple wage calculation based on job type and experience
+        base_wages = {
+            'construction': 500,
+            'cleaning': 400,
+            'delivery': 450,
+            'security': 600,
+            'cooking': 550,
+            'gardening': 400,
+            'painting': 650,
+            'plumbing': 800,
+            'electrical': 900,
+            'carpentry': 750
+        }
+
+        # Find matching job type
+        suggested_wage = 500  # Default
+        for job_type, wage in base_wages.items():
+            if job_type.lower() in job_title.lower():
+                suggested_wage = wage
+                break
+
+        # Adjust for experience
+        if experience == 'experienced':
+            suggested_wage = int(suggested_wage * 1.3)
+        elif experience == 'expert':
+            suggested_wage = int(suggested_wage * 1.5)
         return Response({'suggested_wage': suggested_wage})
     except Exception as e:
         return Response({'error': str(e)}, status=500)
@@ -828,143 +864,297 @@ def register_worker(request):
 
 @api_view(['POST'])
 def verify_aadhaar_card(request):
-    """Verify Aadhaar card by scanning QR code or barcode"""
+    """Verify Aadhaar card using AI/ML OCR"""
     try:
-        if not AADHAAR_VERIFICATION_AVAILABLE:
-            # Enhanced mock Aadhaar verification with image validation
-            user_name = request.data.get('name', '').strip()
-
-            # Check if file was uploaded
-            if 'aadhaar_image' not in request.FILES:
-                return Response({
-                    'success': False,
-                    'error': 'No Aadhaar image uploaded',
-                    'verification_status': 'failed'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            aadhaar_file = request.FILES['aadhaar_image']
-
-            # Basic image validation
-            if not aadhaar_file.content_type.startswith('image/'):
-                return Response({
-                    'success': False,
-                    'error': 'Please upload a valid image file',
-                    'verification_status': 'failed'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Simplified Aadhaar verification - just validate the file
-            import tempfile
-            import os
-            from PIL import Image
-
-            try:
-                # Save uploaded file temporarily
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-                    for chunk in aadhaar_file.chunks():
-                        temp_file.write(chunk)
-                    temp_file_path = temp_file.name
-
-                # Simplified Aadhaar verification - just check if it's a valid image
-                try:
-                    image = Image.open(temp_file_path)
-                    width, height = image.size
-
-                    print(f"✅ Image processed successfully - dimensions: {width}x{height}")  # Debug log
-
-                    # Basic image validation - check if it's a reasonable size
-                    if width > 50 and height > 50 and width * height < 50000000:  # Very lenient validation
-                        # Accept any reasonable image as valid Aadhaar
-                        print(f"✅ Image validation passed for user: {user_name}")  # Debug log
-                        return Response({
-                            'success': True,
-                            'verification_status': 'verified',
-                            'message': 'Aadhaar verified successfully',
-                            'extracted_data': {
-                                'name': user_name,
-                                'aadhaar_number': "4343632133XX",  # Partially masked for privacy
-                            },
-                            'comparison': {
-                                'name_match': True,
-                                'confidence': 0.95
-                            }
-                        })
-                    else:
-                        print(f"❌ Image validation failed - dimensions: {width}x{height}")  # Debug log
-                        return Response({
-                            'success': False,
-                            'error': 'Invalid image dimensions. Please upload a clear image of your Aadhaar card.',
-                            'verification_status': 'failed'
-                        }, status=status.HTTP_400_BAD_REQUEST)
-
-                except Exception as image_error:
-                    print(f"❌ Image processing error: {str(image_error)}")  # Debug log
-                    return Response({
-                        'success': False,
-                        'error': f'Could not process the image: {str(image_error)}. Please try uploading a different format (JPG/PNG).',
-                        'verification_status': 'failed'
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
-                finally:
-                    # Clean up temporary file
-                    try:
-                        if os.path.exists(temp_file_path):
-                            os.unlink(temp_file_path)
-                            print(f"🗑️ Cleaned up temporary file: {temp_file_path}")
-                    except Exception as cleanup_error:
-                        print(f"⚠️ Could not clean up temp file: {cleanup_error}")
-
-            except Exception as e:
-                print(f"❌ General error in Aadhaar verification: {str(e)}")  # Debug log
-                return Response({
-                    'success': False,
-                    'error': f'Failed to process image: {str(e)}. Please try again.',
-                    'verification_status': 'failed'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return Response({
-                    'success': False,
-                    'error': 'Name is required for verification'
-                }, status=status.HTTP_400_BAD_REQUEST)
+        user_name = request.data.get('name', '').strip()
 
         # Check if file was uploaded
         if 'aadhaar_image' not in request.FILES:
             return Response({
-                'error': 'No Aadhaar image uploaded'
+                'success': False,
+                'error': 'No Aadhaar image uploaded',
+                'verification_status': 'failed'
             }, status=status.HTTP_400_BAD_REQUEST)
 
         aadhaar_file = request.FILES['aadhaar_image']
-        user_data = request.data
 
-        # Save uploaded file temporarily
-        import tempfile
-        import os
+        # Basic image validation
+        if not aadhaar_file.content_type.startswith('image/'):
+            return Response({
+                'success': False,
+                'error': 'Please upload a valid image file',
+                'verification_status': 'failed'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as temp_file:
-            for chunk in aadhaar_file.chunks():
-                temp_file.write(chunk)
-            temp_file_path = temp_file.name
+        # Use your AI/ML OCR for Aadhaar verification
+        print(f"🤖 Starting Aadhaar verification for user: {user_name}")
 
+        # Try to use your AI/ML OCR first
         try:
-            # Verify Aadhaar card
-            verification_result = aadhaar_verification_service.verify_aadhaar_image(temp_file_path)
+            # Import your OCR functions locally to avoid global issues
+            import sys
+            import os
+            import cv2
+            import numpy as np
 
-            # If verification successful and user data provided, compare
-            if verification_result['success'] and user_data:
-                comparison_result = aadhaar_verification_service.compare_with_user_data(
-                    verification_result.get('extracted_data', {}),
-                    user_data
-                )
-                verification_result['comparison'] = comparison_result
+            # Add your OCR module to path
+            ocr_path = os.path.join(os.path.dirname(__file__), '..', '..', 'AIML', 'ocr-id-verification', 'src')
+            if ocr_path not in sys.path:
+                sys.path.append(ocr_path)
 
-            return Response(verification_result)
+            from ocr.processor import extract_text_from_image, extract_id_fields
+            from utils.helpers import preprocess_image_from_streamlit
 
-        finally:
-            # Clean up temporary file
-            if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)
+            print("✅ Your ENHANCED AI/ML OCR modules loaded successfully with strict 80% matching")
+
+            # Convert Django file to format your OCR can process
+            file_bytes = aadhaar_file.read()
+
+            # Create a file-like object that your OCR expects
+            class FileWrapper:
+                def __init__(self, content):
+                    self.content = content
+                    self.position = 0
+
+                def read(self):
+                    if self.position == 0:
+                        self.position = len(self.content)
+                        return self.content
+                    return b''
+
+            file_wrapper = FileWrapper(file_bytes)
+
+            # Use your preprocessing function
+            processed_image = preprocess_image_from_streamlit(file_wrapper)
+            print(f"✅ Image preprocessed successfully")
+
+            # Use your EasyOCR extraction
+            extracted_text = extract_text_from_image(processed_image)
+            print(f"📄 Extracted text: {extracted_text[:200]}...")  # First 200 chars
+
+            # Use your field extraction
+            extracted_fields = extract_id_fields(extracted_text)
+            print(f"🔍 Extracted fields: {extracted_fields}")
+
+            # Prepare response data
+            extracted_name = extracted_fields.get('Name', '').strip()
+            extracted_id = extracted_fields.get('ID Number', '').strip()
+            extracted_dob = extracted_fields.get('DOB', '').strip()
+            debug_candidates = extracted_fields.get('debug_candidates', [])
+
+            print(f"🎯 Primary extracted name: '{extracted_name}'")
+            if debug_candidates:
+                print(f"🔍 Alternative name candidates: {debug_candidates}")
+
+            # Enhanced name matching logic with fuzzy matching
+            name_match = False
+            confidence = 0.0
+
+            # If we have an Aadhaar number, that's the primary verification
+            if extracted_id:
+                print(f"✅ Aadhaar number extracted: {extracted_id}")
+
+                # Enhanced name matching logic to handle OCR errors
+                if extracted_name and user_name:
+                    from difflib import SequenceMatcher
+
+                    name1 = extracted_name.lower().strip()
+                    name2 = user_name.lower().strip()
+
+                    # Security check: Both names must be at least 2 characters
+                    if len(name1) < 2 or len(name2) < 2:
+                        confidence = 0.0
+                        name_match = False
+                        print(f"❌ Name match: names too short (OCR: {len(name1)}, User: {len(name2)})")
+                    else:
+                        print(f"🔍 Comparing names: OCR='{extracted_name}' vs User='{user_name}'")
+
+                        # Split names into words
+                        extracted_words = [word for word in name1.split() if len(word) > 1]  # Skip single chars
+                        user_words = [word for word in name2.split() if len(word) > 1]
+
+                        print(f"📝 Extracted words: {extracted_words}")
+                        print(f"👤 User words: {user_words}")
+
+                        # Security check: Both names must have meaningful content
+                        if len(extracted_words) == 0:
+                            confidence = 0.0
+                            name_match = False
+                            print(f"❌ Name match: no name extracted from Aadhaar card")
+                        elif len(user_words) == 0:
+                            confidence = 0.0
+                            name_match = False
+                            print(f"❌ Name match: no user name provided")
+                        elif len(extracted_words) == 1 and len(extracted_words[0]) <= 2:
+                            confidence = 0.0
+                            name_match = False
+                            print(f"❌ Name match: extracted name too short ('{extracted_name}') - likely OCR error")
+                        # Check for exact match first
+                        elif name1 == name2:
+                            confidence = 1.0
+                            name_match = True
+                            print(f"✅ Name match: exact match")
+                        # Check if one name is completely contained in the other (but both must be substantial)
+                        elif len(name1) >= 3 and len(name2) >= 3 and (name1 in name2 or name2 in name1):
+                            confidence = 0.9
+                            name_match = True
+                            print(f"✅ Name match: full substring found")
+                        else:
+                            # Advanced matching with fuzzy logic - STRICT 80% requirement
+                            if len(extracted_words) > 0 and len(user_words) > 0:
+                                matched_words = 0
+                                total_words = len(user_words)
+                                match_details = []
+
+                                print(f"🔍 Strict matching: Requiring 80% of words to match")
+                                print(f"📝 User words to match: {user_words}")
+                                print(f"📄 Available OCR words: {extracted_words}")
+
+                                # Check each user word against extracted words
+                                for i, user_word in enumerate(user_words):
+                                    best_match_ratio = 0
+                                    best_match_word = ""
+
+                                    for extracted_word in extracted_words:
+                                        # Calculate similarity ratio
+                                        ratio = SequenceMatcher(None, user_word, extracted_word).ratio()
+                                        if ratio > best_match_ratio:
+                                            best_match_ratio = ratio
+                                            best_match_word = extracted_word
+
+                                    # Strict matching: Only count as match if similarity is >= 80%
+                                    if best_match_ratio >= 0.8:  # 80% similarity required
+                                        matched_words += 1
+                                        match_details.append(f"✅ '{user_word}' ≈ '{best_match_word}' ({best_match_ratio:.2f})")
+                                        print(f"✅ Word {i+1}: '{user_word}' matches '{best_match_word}' ({best_match_ratio:.2f})")
+                                    else:
+                                        match_details.append(f"❌ '{user_word}' ≈ '{best_match_word}' ({best_match_ratio:.2f}) - Below 80% threshold")
+                                        print(f"❌ Word {i+1}: '{user_word}' vs '{best_match_word}' ({best_match_ratio:.2f}) - INSUFFICIENT")
+
+                                # Calculate match percentage
+                                match_percentage = matched_words / total_words if total_words > 0 else 0
+
+                                print(f"📊 STRICT Match Analysis:")
+                                print(f"   - Words matched: {matched_words}/{total_words}")
+                                print(f"   - Match percentage: {match_percentage:.1%}")
+                                print(f"   - Required threshold: 80%")
+
+                                # STRICT REQUIREMENT: 80% of words must match
+                                if match_percentage >= 0.8:  # 80% match required
+                                    confidence = min(0.9, match_percentage)
+                                    name_match = True
+                                    print(f"✅ VERIFICATION SUCCESS: {match_percentage:.1%} of words matched (≥80% required)")
+                                    for detail in match_details:
+                                        print(f"   {detail}")
+                                else:
+                                    confidence = match_percentage * 0.3  # Lower confidence for failed strict match
+                                    name_match = False
+                                    print(f"❌ VERIFICATION FAILED: Only {match_percentage:.1%} of words matched (80% required)")
+                                    print(f"   Need at least {int(total_words * 0.8)} out of {total_words} words to match")
+                                    for detail in match_details:
+                                        print(f"   {detail}")
+                            else:
+                                confidence = 0.1
+                                name_match = False
+                                print(f"❌ Name match: no valid words found")
+                else:
+                    # Try alternative name candidates if primary name didn't work
+                    if debug_candidates and user_name:
+                        print(f"🔄 Trying alternative name candidates...")
+                        best_candidate_confidence = 0
+                        best_candidate_match = False
+
+                        for candidate_name in debug_candidates:
+                            if candidate_name and candidate_name != extracted_name:
+                                print(f"🧪 Testing candidate: '{candidate_name}'")
+
+                                # Quick fuzzy match test
+                                from difflib import SequenceMatcher
+                                candidate_lower = candidate_name.lower().strip()
+                                user_lower = user_name.lower().strip()
+
+                                # Overall similarity
+                                overall_ratio = SequenceMatcher(None, candidate_lower, user_lower).ratio()
+
+                                if overall_ratio > best_candidate_confidence:
+                                    best_candidate_confidence = overall_ratio
+                                    if overall_ratio >= 0.6:  # 60% similarity threshold
+                                        best_candidate_match = True
+                                        extracted_name = candidate_name  # Update the extracted name
+                                        print(f"✅ Better candidate found: '{candidate_name}' (similarity: {overall_ratio:.2f})")
+
+                        if best_candidate_match:
+                            confidence = min(0.8, best_candidate_confidence)
+                            name_match = True
+                            print(f"✅ Alternative name candidate matched successfully")
+                        else:
+                            # STRICT REQUIREMENT: No verification without proper name matching
+                            confidence = 0.0
+                            name_match = False
+                            print(f"❌ STRICT VERIFICATION FAILED: No name candidates meet 80% matching requirement")
+                    else:
+                        # STRICT REQUIREMENT: No verification without proper name matching
+                        confidence = 0.0
+                        name_match = False
+                        print(f"❌ STRICT VERIFICATION FAILED: No name extracted from Aadhaar card")
+            else:
+                print(f"❌ No Aadhaar number extracted")
+
+            # STRICT VERIFICATION: Require BOTH Aadhaar number AND 80% name match
+            if extracted_id:
+                if name_match and confidence >= 0.8:  # Strict 80% requirement
+                    verification_status = 'verified'
+                    message = f'✅ Aadhaar verified successfully! 80%+ name match achieved. (confidence: {confidence:.1%})'
+                else:
+                    verification_status = 'name_mismatch'
+                    if extracted_name and len(extracted_name.strip()) > 0:
+                        if len(extracted_name.strip()) <= 2:
+                            message = f'❌ Name Verification Failed: OCR extracted incomplete name "{extracted_name}". Please upload a clearer image of your Aadhaar card where the full name is clearly visible.'
+                        else:
+                            message = f'❌ Name Verification Failed: Name verification failed. Aadhaar shows "{extracted_name}" but you entered "{user_name}". Please enter your full name as shown on your Aadhaar card.'
+                    else:
+                        message = f'❌ Name Verification Failed: Could not extract name from Aadhaar card. Please ensure the image is clear and shows your full name prominently.'
+            else:
+                verification_status = 'failed'
+                message = '❌ Aadhaar Number Not Found: Could not extract Aadhaar number from image. Please ensure the image is clear and shows the full Aadhaar card.'
+
+            # Determine success based on verification status
+            is_success = verification_status == 'verified'
+            status_code = status.HTTP_200_OK if is_success else status.HTTP_400_BAD_REQUEST
+
+            return Response({
+                'success': is_success,
+                'verification_status': verification_status,
+                'message': message,
+                'extracted_data': {
+                    'name': extracted_name,
+                    'aadhaar_number': extracted_id,
+                    'dob': extracted_dob,
+                    'raw_text': extracted_text[:500]  # First 500 chars for debugging
+                },
+                'comparison': {
+                    'name_match': name_match,
+                    'confidence': confidence,
+                    'extracted_name': extracted_name,
+                    'provided_name': user_name
+                },
+                'ocr_method': 'Enhanced_Aadhaar_OCR_80_Percent_Strict'
+            }, status=status_code)
+
+        except Exception as ocr_error:
+            print(f"❌ ENHANCED AI/ML OCR error: {str(ocr_error)}")
+            # NO FALLBACK - Strict 80% matching required
+            return Response({
+                'success': False,
+                'verification_status': 'ocr_failed',
+                'message': f'OCR processing failed: {str(ocr_error)}. Please ensure the Aadhaar card image is clear and well-lit.',
+                'error': 'OCR_PROCESSING_ERROR'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
     except Exception as e:
+        print(f"❌ Unexpected error in verify_aadhaar_card: {str(e)}")
         return Response({
-            'error': str(e),
-            'verification_status': 'failed'
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'success': False,
+            'error': f'Verification system error: {str(e)}',
+            'verification_status': 'system_error'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

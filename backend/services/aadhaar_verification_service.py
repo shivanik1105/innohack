@@ -1,6 +1,11 @@
 import cv2
 import numpy as np
-from pyzbar import pyzbar
+try:
+    from pyzbar import pyzbar
+    PYZBAR_AVAILABLE = True
+except ImportError:
+    PYZBAR_AVAILABLE = False
+    print("Warning: pyzbar not available, QR code scanning disabled")
 import xml.etree.ElementTree as ET
 import base64
 import re
@@ -59,38 +64,46 @@ class AadhaarVerificationService:
     
     def _decode_qr_codes(self, image) -> Optional[str]:
         """Decode QR codes from image"""
+        if not PYZBAR_AVAILABLE:
+            logger.warning("pyzbar not available, skipping QR code extraction")
+            return None
+
         try:
             # Convert to grayscale for better detection
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-            
+
             # Detect and decode QR codes
             qr_codes = pyzbar.decode(gray)
-            
+
             for qr_code in qr_codes:
                 # Aadhaar QR codes contain XML data
                 qr_data = qr_code.data.decode('utf-8')
                 if self._is_aadhaar_qr(qr_data):
                     return qr_data
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Error decoding QR codes: {str(e)}")
             return None
     
     def _decode_barcodes(self, image) -> Optional[str]:
         """Decode barcodes from image"""
+        if not PYZBAR_AVAILABLE:
+            logger.warning("pyzbar not available, skipping barcode extraction")
+            return None
+
         try:
             gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
             barcodes = pyzbar.decode(gray)
-            
+
             for barcode in barcodes:
                 barcode_data = barcode.data.decode('utf-8')
                 if self._is_aadhaar_barcode(barcode_data):
                     return barcode_data
-            
+
             return None
-            
+
         except Exception as e:
             logger.error(f"Error decoding barcodes: {str(e)}")
             return None
