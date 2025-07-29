@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { ChevronDown } from 'lucide-react';
-import i18n from '../i18n';
+import { ChevronDown, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import i18n from '../i18n';
+import { Language } from '../utils/translations';
 
-type Language = 'mr' | 'hi' | 'en';
-
-type LanguageSelectorProps = {
+interface LanguageSelectorProps {
   currentLanguage: Language;
-  onLanguageChange: (selectedLanguage: Language) => void;
-};
+  onLanguageChange: (lang: Language) => void;
+}
 
-const LanguageSelector = ({ currentLanguage, onLanguageChange }: LanguageSelectorProps) => {
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ currentLanguage, onLanguageChange }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<Language>(currentLanguage);
+  const navigate = useNavigate();
 
   const languages = [
     { code: 'mr' as Language, name: 'मराठी', flag: '🇮🇳' },
@@ -21,70 +23,79 @@ const LanguageSelector = ({ currentLanguage, onLanguageChange }: LanguageSelecto
   ];
 
   useEffect(() => {
-    i18n.changeLanguage(currentLanguage);
-    localStorage.setItem('language', currentLanguage);
-  }, [currentLanguage]);
+    const storedLang = localStorage.getItem('appLanguage') as Language;
+    const langToSet = storedLang || currentLanguage || 'en';
+    setSelectedLanguage(langToSet);
+    i18n.changeLanguage(langToSet);
+    onLanguageChange(langToSet);
+  }, [currentLanguage, onLanguageChange]);
 
-  const handleLanguageChange = (language: Language) => {
+  const handleLanguageChange = (lang: Language) => {
+    setSelectedLanguage(lang);
+    i18n.changeLanguage(lang);
+    localStorage.setItem('appLanguage', lang);
+    onLanguageChange(lang);
     setIsOpen(false);
-    onLanguageChange(language);
+
+    // Navigate back or to home after selecting
+    setTimeout(() => navigate(-1), 300);
   };
 
   const selectedLang = languages.find((lang) => lang.code === currentLanguage);
 
   return (
-    <div className="relative inline-block text-left">
-      <div>
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center w-full px-4 py-2 text-sm text-blue-500 hover:bg-blue-50 transition-colors duration-150"
-          id="language-menu"
-          aria-expanded={isOpen}
-          aria-haspopup="true"
-        >
-          {selectedLang ? (
-            <>
-              <span className="mr-2 text-lg">{selectedLang.flag}</span>
-              <span className="text-blue-600 font-medium">{selectedLang.name}</span>
-            </>
-          ) : (
-            <span className="text-blue-500">{t('choose_language')}</span>
-          )}
-          <ChevronDown
-            className={`w-4 h-4 ml-2 transition-transform duration-200 ${
-              isOpen ? 'transform rotate-180' : ''
-            }`}
-          />
-        </button>
-      </div>
-
-      {isOpen && (
-        <div
-          className="absolute right-0 z-10 w-56 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-blue-200 focus:outline-none border border-blue-100"
-          role="menu"
-          aria-orientation="vertical"
-          aria-labelledby="language-menu"
-        >
-          <div className="py-1" role="none">
-            {languages.map((language) => (
-              <button
-                key={language.code}
-                onClick={() => handleLanguageChange(language.code)}
-                className={`flex items-center w-full px-4 py-2 text-sm hover:bg-blue-50 transition-colors duration-150 ${
-                  currentLanguage === language.code
-                    ? 'bg-blue-50 text-blue-600 font-semibold'
-                    : 'text-blue-500'
-                }`}
-                role="menuitem"
-              >
-                <span className="mr-2 text-lg">{language.flag}</span>
-                {language.name}
-              </button>
-            ))}
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-md text-center">
+        <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Globe className="w-10 h-10 text-white" />
         </div>
-      )}
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('choose_language')}</h1>
+        <p className="text-gray-600 mb-6">{t('select_language_to_continue')}</p>
+
+        <div className="relative inline-block text-left w-full">
+          <button
+            type="button"
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex items-center justify-between w-full px-4 py-3 text-base text-blue-600 bg-white border border-blue-200 rounded-xl shadow-sm hover:bg-blue-50 transition duration-150"
+            id="language-menu"
+            aria-expanded={isOpen}
+            aria-haspopup="true"
+          >
+            {selectedLang ? (
+              <>
+                <span className="mr-2 text-xl">{selectedLang.flag}</span>
+                <span className="font-medium">{selectedLang.name}</span>
+              </>
+            ) : (
+              <span className="text-blue-500">{t('choose_language')}</span>
+            )}
+            <ChevronDown
+              className={`w-5 h-5 ml-2 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+
+          {isOpen && (
+            <div className="absolute left-0 right-0 z-20 mt-2 bg-white rounded-xl shadow-lg border border-blue-200 ring-1 ring-blue-100 focus:outline-none animate-fadeIn">
+              <div className="py-1">
+                {languages.map((language) => (
+                  <button
+                    key={language.code}
+                    onClick={() => handleLanguageChange(language.code)}
+                    className={`flex items-center w-full px-4 py-2 text-base transition-colors duration-150 ${
+                      selectedLanguage === language.code
+                        ? 'bg-blue-50 text-blue-600 font-semibold'
+                        : 'text-blue-500 hover:bg-blue-50'
+                    }`}
+                  >
+                    <span className="mr-2 text-xl">{language.flag}</span>
+                    {language.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

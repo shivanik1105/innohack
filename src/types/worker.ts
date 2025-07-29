@@ -1,45 +1,56 @@
-// This file defines the "rulebook" for your data types in the frontend.
-// It should match your Django models.
-
-// New interface for Certification, based on your code
-export interface Certification {
-  label: string;
-  url: string;
-  verified: boolean;
+export interface Worker {
+  id: string;
+  phoneNumber: string;
+  name: string;
+  age: number;
+  pinCode: string;
+  photo?: string;
+  gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+  aadhaarNumber: string;
+  aadhaarCardImage: string | null | undefined;
+  email: string;
+  dateOfBirth: string; // Required field in YYYY-MM-DD format
+  workerType: 'daily' | 'skilled' | 'semi-skilled';
+  isAvailableToday: boolean;
+  jobTypes: string[];
+  skills?: string[];
+  certifications?: Certification[];
+  portfolio?: PortfolioItem[];
+  rating: number;
+  totalJobs: number;
+  verificationStatus: 'pending' | 'verified' | 'premium';
+  createdAt: string;
+  language: string;
+  // New fields for enhanced functionality
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+  notifications?: Notification[];
 }
 
-// New interface for PortfolioItem, based on your code
-export interface PortfolioItem {
+export interface Certification {
+  id: string;
+  type: 'government' | 'ngo' | 'private' | 'reference';
   title: string;
   imageUrl: string;
-  description?: string;
+  ipfsHash?: string;
+  isVerified: boolean;
+  verificationData: any;
+  uploadedAt: string;
+  verifiedAt?: string;
 }
 
-export interface Worker {
-  uid: string; // Changed from 'id' to match Firebase and backend
-  userType: 'daily' | 'skilled';
-  name: string;
-  age?: number;
-  pincode: string; // Standardized to 'pincode'
-  phoneNumber: string;
-  createdAt: string; // Dates from JSON are strings
-
-  // Daily worker fields
-  dailyJobTypes: string[];
-  isAvailableToday?: boolean;
-  // Skilled worker fields
-  profilePhotoUrl?: string; // Standardized to 'profilePhotoUrl'
+export interface PortfolioItem {
+  id: string;
+  title: string;
+  description: string;
+  imageUrl: string;
+  location: string;
+  completedAt: string;
   skills: string[];
-  isVerified: boolean;
-  certifications?: Certification[]; // Added from your code
-  portfolio?: PortfolioItem[]; // Added from your code
-  averageRating: number; // Standardized to 'averageRating'
-  jobsCompleted: number; // Standardized to 'jobsCompleted'
-  
-  // New fields from your code
-  language?: string;
-  experience?: number;
-  location?: string;
+  createdAt: string;
 }
 
 export interface Job {
@@ -54,16 +65,30 @@ export interface Job {
   jobType: string;
   requiredWorkers: number;
   duration: string;
-  postedAt: Date; // Assuming this is converted to a Date object on the frontend
-  status: 'open' | 'in_progress' | 'completed';
+  postedAt: Date;
+  status: 'open' | 'filled' | 'completed';
+  companyLogo?: string;
+  companyPhotos?: string[];
 }
 
 // You can add other types here as needed
 export interface PaymentLog {
-    id: string;
-    jobId: string;
-    jobTitle: string;
-    date: string;
-    amount: number;
-    status: 'Paid' | 'Pending';
+  id: string;
+  workerId: string;
+  jobId: string;
+  amount: number;
+  status: 'paid' | 'pending';
+  workDate: string;
+  paidAt?: Date;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'job_match' | 'rating' | 'payment' | 'verification' | 'general';
+  isRead: boolean;
+  createdAt: string;
+  jobId?: string;
+  actionUrl?: string;
 }

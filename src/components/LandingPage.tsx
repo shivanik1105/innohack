@@ -1,20 +1,40 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { BadgeCheck, MapPin, Users, Clock, Check, Shield, Bell, Star, Navigation } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import LanguageSelector from './LanguageSelector';
 import { useTranslation } from 'react-i18next';
+import { localizeNumber } from '../utils/numberLocalization';
 // Make sure the path to your translations file is correct
 // import { translations } from './translations'; // This import is not needed here if i18next is configured correctly
 
 export default function LandingPage() {
-
+  const [currentLang, setCurrentLang] = useState(localStorage.getItem('appLanguage') || 'en');
   const navigate = useNavigate();
-  const { t } = useTranslation(); // Hook to access translations
+  const { t, i18n } = useTranslation(); // Hook to access translations
+
+  // Debug logging
+  console.log('Current language:', i18n.language);
+  console.log('Available languages:', i18n.languages);
+  console.log('Hero title translation:', t('heroTitle'));
+  console.log('Current lang state:', currentLang);
+  console.log('LocalStorage language:', localStorage.getItem('appLanguage'));
+
+  // Effect to sync with i18n language changes
+  useEffect(() => {
+    const handleLanguageChange = (lng: string) => {
+      setCurrentLang(lng);
+    };
+
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [i18n]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-[#e9f1fd] to-[#f2f7ff]">
+    <div key={currentLang} className="min-h-screen bg-gradient-to-r from-[#e9f1fd] to-[#f2f7ff]">
       {/* Hero Section */}
       <div className="flex items-center justify-center p-8">
         <div className="max-w-7xl w-full min-h-[90vh] mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
@@ -23,6 +43,8 @@ export default function LandingPage() {
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 leading-tight">
               {t('heroTitle')}
             </h1>
+            {/* Debug button */}
+            
             <p className="text-gray-600 text-lg md:text-xl">
               {t('heroSubtitle')}
             </p>
@@ -37,24 +59,59 @@ export default function LandingPage() {
                 <Clock className="w-5 h-5 text-blue-500" /> {t('supportText')}
               </div>
             </div>
-            <div className="flex gap-4 mt-4">
-              <div>
-                {/* Other content */}
-                <LanguageSelector />
-              </div>
-              <Button
-                variant="outline"
-                className="px-6 py-3 border-blue-600 text-blue-600 text-lg"
-                onClick={() => navigate("/register")}
-              >
-                {t('buildProfile')}
-              </Button>
-            </div>
-            <div className="flex gap-4 mt-6 flex-wrap">
-              <span className="bg-white px-4 py-2 rounded shadow text-sm">{t('ConstructionCo')}</span>
-              <span className="bg-white px-4 py-2 rounded shadow text-sm">{t('ElectricPro')}</span>
-              <span className="bg-white px-4 py-2 rounded shadow text-sm">{t('PlumbingPlus')}</span>
-            </div>
+            <div className="flex items-center justify-center mt-4 gap-4">
+  {/* Label on the left */}
+  <label htmlFor="language-select" className="text-gray-600 text-lg font-medium whitespace-nowrap">
+    {t('Select Preferred Language')}
+  </label>
+
+  {/* Dropdown on the right */}
+  <div className="relative w-full max-w-xs">
+    <select
+      id="language-select"
+      value={currentLang}
+      onChange={async (e) => {
+        const newLang = e.target.value;
+        console.log('Changing language to:', newLang);
+        console.log('Current language before change:', i18n.language);
+
+        // Clear any cached language data
+        localStorage.removeItem('appLanguage');
+
+        // Set the new language
+        await i18n.changeLanguage(newLang);
+        localStorage.setItem('appLanguage', newLang);
+        setCurrentLang(newLang);
+
+        console.log('Language changed to:', i18n.language);
+        console.log('New translation for heroTitle:', t('heroTitle'));
+
+        // Show an alert to confirm the language change
+        alert(`Language changed to: ${newLang}\nHero title: ${t('heroTitle')}`);
+
+        // Try without page reload first
+        // window.location.href = window.location.href + '?t=' + Date.now();
+      }}
+      className="appearance-none w-full bg-gradient-to-r from-[#e9f1fd] to-[#f2f7ff] border-2 border-blue-600
+                text-blue-700 px-6 py-3 pr-10 rounded-lg text-lg font-medium
+                focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+                hover:border-blue-700 hover:text-blue-800 transition-all duration-200
+                cursor-pointer"
+    >
+      <option value="en">English</option>
+      <option value="hi">हिन्दी</option>
+      <option value="mr">मराठी</option>
+    </select>
+
+    {/* Custom dropdown arrow */}
+    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+      <svg className="h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+      </svg>
+    </div>
+  </div>
+</div>
+
             <Button
               className="
                 w-[400px]
@@ -84,12 +141,12 @@ export default function LandingPage() {
               className="rounded-2xl shadow-lg w-full  h-[600px] object-cover transition-transform duration-300 hover:scale-105"
             />
             {/* Live Jobs Available */}
-            <Card className="absolute top-[-20px] left-[-20px] px-4 py-2 bg-white shadow-md border rounded-xl">
-              <div className="text-sm text-gray-500">
-                <span className="w-2 h-2 rounded-full bg-red-400 inline-block"></span>
+            <Card className="absolute top-[-20px] left-[-20px] px-5 py-3 bg-white border border-gray-200 rounded-2xl shadow-lg space-y-1">
+              <div className="flex items-center text-sm text-gray-500">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block mr-2"></span>
                 {t('liveJobsAvailable')}
               </div>
-              <div className="text-blue-700 text-xl font-bold">247</div>
+              <div className="text-blue-700 text-2xl font-semibold tracking-tight">{localizeNumber('247', i18n.language)}</div>
             </Card>
             {/* Verified Workers */}
             <Card className="absolute bottom-[-20px] right-[-20px] px-4 py-2 bg-white shadow-md border rounded-xl">
@@ -97,7 +154,7 @@ export default function LandingPage() {
                 <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block"></span>
                 {t('verifiedWorkers')}
               </div>
-              <div className="text-blue-700 text-xl font-bold">8,430</div>
+              <div className="text-blue-700 text-xl font-bold">{localizeNumber('8,430', i18n.language)}</div>
             </Card>
           </div>
         </div>
