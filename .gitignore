@@ -31,15 +31,11 @@ dist-ssr
 .env.production.local
 
 # Firebase and Google Cloud credentials
-firebase_key.json
-*firebase-adminsdk*.json
 service-account-key.json
 google-credentials.json
 gcp-key.json
 
 # Backend specific
-backend/firebase_key.json
-backend/*firebase-adminsdk*.json
 backend/service-account-key.json
 backend/google-credentials.json
 backend/gcp-key.json
