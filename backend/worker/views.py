@@ -78,12 +78,12 @@ try:
     import os
 
     # Add your OCR module to path
-    ocr_path = os.path.join(os.path.dirname(__file__), '..', '..', 'AIML', 'ocr-id-verification', 'src')
+    ocr_path = os.path.join(os.path.dirname(__file__), '..', 'services', 'ocr_id_verification', 'src')
     if ocr_path not in sys.path:
         sys.path.append(ocr_path)
 
-    from ocr.processor import extract_text_from_image, extract_id_fields
-    from utils.helpers import preprocess_image_from_streamlit
+    from ocr.processor import extract_text_from_image, extract_id_fields, enhanced_fuzzy_match
+    from utils.helpers import preprocess_image_from_streamlit, validate_image_quality, enhance_text_regions
 
     AADHAAR_VERIFICATION_AVAILABLE = True
     print("✅ Your AI/ML OCR service loaded successfully with EasyOCR")
@@ -482,8 +482,9 @@ def test_ocr_endpoint(request):
     """Simple test endpoint to verify API is working"""
     return Response({
         'status': 'success',
-        'message': 'OCR API is working',
-        'ocr_available': OCR_AVAILABLE,
+        'message': 'Enhanced Aadhaar OCR API is working',
+        'ocr_available': AADHAAR_VERIFICATION_AVAILABLE,
+        'enhanced_ocr_loaded': AADHAAR_VERIFICATION_AVAILABLE,
         'timestamp': str(timezone.now())
     })
 
@@ -886,10 +887,10 @@ def verify_aadhaar_card(request):
                 'verification_status': 'failed'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Use your AI/ML OCR for Aadhaar verification
-        print(f"🤖 Starting Aadhaar verification for user: {user_name}")
+        # Use your ENHANCED AI/ML OCR for Aadhaar verification
+        print(f"🤖 Starting ENHANCED Aadhaar verification for user: {user_name}")
 
-        # Try to use your AI/ML OCR first
+        # Try to use your enhanced AI/ML OCR first
         try:
             # Import your OCR functions locally to avoid global issues
             import sys
@@ -897,15 +898,15 @@ def verify_aadhaar_card(request):
             import cv2
             import numpy as np
 
-            # Add your OCR module to path
-            ocr_path = os.path.join(os.path.dirname(__file__), '..', '..', 'AIML', 'ocr-id-verification', 'src')
+            # Add your OCR module to path (updated path)
+            ocr_path = os.path.join(os.path.dirname(__file__), '..', 'services', 'ocr_id_verification', 'src')
             if ocr_path not in sys.path:
                 sys.path.append(ocr_path)
 
-            from ocr.processor import extract_text_from_image, extract_id_fields
-            from utils.helpers import preprocess_image_from_streamlit
+            from ocr.processor import extract_text_from_image, extract_id_fields, enhanced_fuzzy_match
+            from utils.helpers import preprocess_image_from_streamlit, validate_image_quality, enhance_text_regions
 
-            print("✅ Your ENHANCED AI/ML OCR modules loaded successfully with strict 80% matching")
+            print("✅ Your ENHANCED AI/ML OCR modules loaded successfully with 80% strict matching and advanced preprocessing")
 
             # Convert Django file to format your OCR can process
             file_bytes = aadhaar_file.read()
@@ -924,15 +925,29 @@ def verify_aadhaar_card(request):
 
             file_wrapper = FileWrapper(file_bytes)
 
-            # Use your preprocessing function
+            # Enhanced image preprocessing with validation
+            print("🖼️ Starting enhanced image preprocessing...")
             processed_image = preprocess_image_from_streamlit(file_wrapper)
-            print(f"✅ Image preprocessed successfully")
 
-            # Use your EasyOCR extraction
-            extracted_text = extract_text_from_image(processed_image)
-            print(f"📄 Extracted text: {extracted_text[:200]}...")  # First 200 chars
+            # Validate image quality
+            is_quality_ok, quality_message = validate_image_quality(processed_image)
+            print(f"🔍 Image quality check: {quality_message}")
 
-            # Use your field extraction
+            if not is_quality_ok:
+                print(f"⚠️ Image quality warning: {quality_message}")
+                # Continue processing but note the quality issue
+
+            # Enhance text regions for better OCR
+            enhanced_image = enhance_text_regions(processed_image)
+            print(f"✅ Image preprocessing and enhancement completed")
+
+            # Use your enhanced EasyOCR extraction
+            print("📄 Starting enhanced text extraction...")
+            extracted_text = extract_text_from_image(enhanced_image)
+            print(f"📄 Extracted text ({len(extracted_text)} chars): {extracted_text[:300]}...")  # First 300 chars
+
+            # Use your enhanced field extraction
+            print("🔍 Starting enhanced field extraction...")
             extracted_fields = extract_id_fields(extracted_text)
             print(f"🔍 Extracted fields: {extracted_fields}")
 
@@ -940,163 +955,31 @@ def verify_aadhaar_card(request):
             extracted_name = extracted_fields.get('Name', '').strip()
             extracted_id = extracted_fields.get('ID Number', '').strip()
             extracted_dob = extracted_fields.get('DOB', '').strip()
-            debug_candidates = extracted_fields.get('debug_candidates', [])
 
             print(f"🎯 Primary extracted name: '{extracted_name}'")
-            if debug_candidates:
-                print(f"🔍 Alternative name candidates: {debug_candidates}")
+            print(f"🆔 Extracted Aadhaar number: '{extracted_id}'")
+            print(f"📅 Extracted DOB: '{extracted_dob}'")
 
             # Enhanced name matching logic with fuzzy matching
             name_match = False
             confidence = 0.0
+            match_message = ""
 
             # If we have an Aadhaar number, that's the primary verification
             if extracted_id:
                 print(f"✅ Aadhaar number extracted: {extracted_id}")
 
-                # Enhanced name matching logic to handle OCR errors
+                # Use enhanced fuzzy matching for name verification
                 if extracted_name and user_name:
-                    from difflib import SequenceMatcher
-
-                    name1 = extracted_name.lower().strip()
-                    name2 = user_name.lower().strip()
-
-                    # Security check: Both names must be at least 2 characters
-                    if len(name1) < 2 or len(name2) < 2:
-                        confidence = 0.0
-                        name_match = False
-                        print(f"❌ Name match: names too short (OCR: {len(name1)}, User: {len(name2)})")
-                    else:
-                        print(f"🔍 Comparing names: OCR='{extracted_name}' vs User='{user_name}'")
-
-                        # Split names into words
-                        extracted_words = [word for word in name1.split() if len(word) > 1]  # Skip single chars
-                        user_words = [word for word in name2.split() if len(word) > 1]
-
-                        print(f"📝 Extracted words: {extracted_words}")
-                        print(f"👤 User words: {user_words}")
-
-                        # Security check: Both names must have meaningful content
-                        if len(extracted_words) == 0:
-                            confidence = 0.0
-                            name_match = False
-                            print(f"❌ Name match: no name extracted from Aadhaar card")
-                        elif len(user_words) == 0:
-                            confidence = 0.0
-                            name_match = False
-                            print(f"❌ Name match: no user name provided")
-                        elif len(extracted_words) == 1 and len(extracted_words[0]) <= 2:
-                            confidence = 0.0
-                            name_match = False
-                            print(f"❌ Name match: extracted name too short ('{extracted_name}') - likely OCR error")
-                        # Check for exact match first
-                        elif name1 == name2:
-                            confidence = 1.0
-                            name_match = True
-                            print(f"✅ Name match: exact match")
-                        # Check if one name is completely contained in the other (but both must be substantial)
-                        elif len(name1) >= 3 and len(name2) >= 3 and (name1 in name2 or name2 in name1):
-                            confidence = 0.9
-                            name_match = True
-                            print(f"✅ Name match: full substring found")
-                        else:
-                            # Advanced matching with fuzzy logic - STRICT 80% requirement
-                            if len(extracted_words) > 0 and len(user_words) > 0:
-                                matched_words = 0
-                                total_words = len(user_words)
-                                match_details = []
-
-                                print(f"🔍 Strict matching: Requiring 80% of words to match")
-                                print(f"📝 User words to match: {user_words}")
-                                print(f"📄 Available OCR words: {extracted_words}")
-
-                                # Check each user word against extracted words
-                                for i, user_word in enumerate(user_words):
-                                    best_match_ratio = 0
-                                    best_match_word = ""
-
-                                    for extracted_word in extracted_words:
-                                        # Calculate similarity ratio
-                                        ratio = SequenceMatcher(None, user_word, extracted_word).ratio()
-                                        if ratio > best_match_ratio:
-                                            best_match_ratio = ratio
-                                            best_match_word = extracted_word
-
-                                    # Strict matching: Only count as match if similarity is >= 80%
-                                    if best_match_ratio >= 0.8:  # 80% similarity required
-                                        matched_words += 1
-                                        match_details.append(f"✅ '{user_word}' ≈ '{best_match_word}' ({best_match_ratio:.2f})")
-                                        print(f"✅ Word {i+1}: '{user_word}' matches '{best_match_word}' ({best_match_ratio:.2f})")
-                                    else:
-                                        match_details.append(f"❌ '{user_word}' ≈ '{best_match_word}' ({best_match_ratio:.2f}) - Below 80% threshold")
-                                        print(f"❌ Word {i+1}: '{user_word}' vs '{best_match_word}' ({best_match_ratio:.2f}) - INSUFFICIENT")
-
-                                # Calculate match percentage
-                                match_percentage = matched_words / total_words if total_words > 0 else 0
-
-                                print(f"📊 STRICT Match Analysis:")
-                                print(f"   - Words matched: {matched_words}/{total_words}")
-                                print(f"   - Match percentage: {match_percentage:.1%}")
-                                print(f"   - Required threshold: 80%")
-
-                                # STRICT REQUIREMENT: 80% of words must match
-                                if match_percentage >= 0.8:  # 80% match required
-                                    confidence = min(0.9, match_percentage)
-                                    name_match = True
-                                    print(f"✅ VERIFICATION SUCCESS: {match_percentage:.1%} of words matched (≥80% required)")
-                                    for detail in match_details:
-                                        print(f"   {detail}")
-                                else:
-                                    confidence = match_percentage * 0.3  # Lower confidence for failed strict match
-                                    name_match = False
-                                    print(f"❌ VERIFICATION FAILED: Only {match_percentage:.1%} of words matched (80% required)")
-                                    print(f"   Need at least {int(total_words * 0.8)} out of {total_words} words to match")
-                                    for detail in match_details:
-                                        print(f"   {detail}")
-                            else:
-                                confidence = 0.1
-                                name_match = False
-                                print(f"❌ Name match: no valid words found")
-                else:
-                    # Try alternative name candidates if primary name didn't work
-                    if debug_candidates and user_name:
-                        print(f"🔄 Trying alternative name candidates...")
-                        best_candidate_confidence = 0
-                        best_candidate_match = False
-
-                        for candidate_name in debug_candidates:
-                            if candidate_name and candidate_name != extracted_name:
-                                print(f"🧪 Testing candidate: '{candidate_name}'")
-
-                                # Quick fuzzy match test
-                                from difflib import SequenceMatcher
-                                candidate_lower = candidate_name.lower().strip()
-                                user_lower = user_name.lower().strip()
-
-                                # Overall similarity
-                                overall_ratio = SequenceMatcher(None, candidate_lower, user_lower).ratio()
-
-                                if overall_ratio > best_candidate_confidence:
-                                    best_candidate_confidence = overall_ratio
-                                    if overall_ratio >= 0.6:  # 60% similarity threshold
-                                        best_candidate_match = True
-                                        extracted_name = candidate_name  # Update the extracted name
-                                        print(f"✅ Better candidate found: '{candidate_name}' (similarity: {overall_ratio:.2f})")
-
-                        if best_candidate_match:
-                            confidence = min(0.8, best_candidate_confidence)
-                            name_match = True
-                            print(f"✅ Alternative name candidate matched successfully")
-                        else:
-                            # STRICT REQUIREMENT: No verification without proper name matching
-                            confidence = 0.0
-                            name_match = False
-                            print(f"❌ STRICT VERIFICATION FAILED: No name candidates meet 80% matching requirement")
-                    else:
-                        # STRICT REQUIREMENT: No verification without proper name matching
-                        confidence = 0.0
-                        name_match = False
-                        print(f"❌ STRICT VERIFICATION FAILED: No name extracted from Aadhaar card")
+                    print(f"🔍 Starting enhanced fuzzy matching...")
+                    name_match, confidence, match_message = enhanced_fuzzy_match(
+                        extracted_name, user_name, min_confidence=0.8
+                    )
+                    print(f"🎯 Enhanced matching result: {match_message}")
+                    # STRICT REQUIREMENT: No verification without proper name matching
+                    confidence = 0.0
+                    name_match = False
+                    print(f"❌ STRICT VERIFICATION FAILED: No name extracted from Aadhaar card")
             else:
                 print(f"❌ No Aadhaar number extracted")
 
@@ -1104,7 +987,7 @@ def verify_aadhaar_card(request):
             if extracted_id:
                 if name_match and confidence >= 0.8:  # Strict 80% requirement
                     verification_status = 'verified'
-                    message = f'✅ Aadhaar verified successfully! 80%+ name match achieved. (confidence: {confidence:.1%})'
+                    message = f'✅ Aadhaar verified successfully! Enhanced OCR with 80%+ name match achieved. (confidence: {confidence:.1%}) - {match_message}'
                 else:
                     verification_status = 'name_mismatch'
                     if extracted_name and len(extracted_name.strip()) > 0:
@@ -1138,7 +1021,7 @@ def verify_aadhaar_card(request):
                     'extracted_name': extracted_name,
                     'provided_name': user_name
                 },
-                'ocr_method': 'Enhanced_Aadhaar_OCR_80_Percent_Strict'
+                'ocr_method': 'Enhanced_Aadhaar_OCR_v2_Advanced_Preprocessing_80_Percent_Strict'
             }, status=status_code)
 
         except Exception as ocr_error:
