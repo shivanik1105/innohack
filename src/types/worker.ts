@@ -5,11 +5,11 @@ export interface Worker {
   age: number;
   pinCode: string;
   photo?: string;
-  gender?: 'male' | 'female' | string;
+  gender: 'male' | 'female' | 'other' | 'prefer-not-to-say';
   aadhaarNumber: string;
   aadhaarCardImage: string | null | undefined;
-  email?: string;
-  dateOfBirth?: string;
+  email: string;
+  dateOfBirth: string; // Required field in YYYY-MM-DD format
   workerType: 'daily' | 'skilled' | 'semi-skilled';
   isAvailableToday: boolean;
   jobTypes: string[];
@@ -18,9 +18,16 @@ export interface Worker {
   portfolio?: PortfolioItem[];
   rating: number;
   totalJobs: number;
-  verificationStatus: 'pending' | 'verified' | 'rejected';
+  verificationStatus: 'pending' | 'verified' | 'premium';
   createdAt: string;
   language: string;
+  // New fields for enhanced functionality
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+  notifications?: Notification[];
 }
 
 export interface Certification {
@@ -30,15 +37,20 @@ export interface Certification {
   imageUrl: string;
   ipfsHash?: string;
   isVerified: boolean;
+  verificationData: any;
   uploadedAt: string;
+  verifiedAt?: string;
 }
 
 export interface PortfolioItem {
   id: string;
   title: string;
+  description: string;
   imageUrl: string;
   location: string;
   completedAt: string;
+  skills: string[];
+  createdAt: string;
 }
 
 export interface Job {
@@ -55,6 +67,8 @@ export interface Job {
   duration: string;
   postedAt: Date;
   status: 'open' | 'filled' | 'completed';
+  companyLogo?: string;
+  companyPhotos?: string[];
 }
 
 export interface PaymentLog {
@@ -65,4 +79,15 @@ export interface PaymentLog {
   status: 'paid' | 'pending';
   workDate: string;
   paidAt?: Date;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'job_match' | 'rating' | 'payment' | 'verification' | 'general';
+  isRead: boolean;
+  createdAt: string;
+  jobId?: string;
+  actionUrl?: string;
 }

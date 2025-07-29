@@ -33,6 +33,13 @@
      const response = await fetch(`${API_BASE_URL}/api/jobs/?pincode=${pincode}`);
      return handleResponse(response);
  };
+
+export const getJobRecommendations = async (uid: string): Promise<Job[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/jobs/recommendations/${uid}/`);
+    const data = await handleResponse(response);
+    // The API now returns an object with jobs array and metadata
+    return data.jobs || data; // Fallback to data if jobs property doesn't exist
+};
  
  export const verifyCertificate = async (uid: string, imageFile: File) => {
      const formData = new FormData();
@@ -46,20 +53,24 @@
  };
 
 
- export const sendOtp = async (phoneNumber: string): Promise<{ session_id: string }> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/send-otp/`, {
+export const sendOtp = async (phoneNumber: string): Promise<{ session_id: string }> => {
+  console.log('Sending OTP for phone number:', phoneNumber);
+  const response = await fetch(`${API_BASE_URL}/api/auth/send-otp/`, { // Ensure this URL matches your backend urls.py
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ phoneNumber }),
   });
-  return handleResponse(response); // Assumes you have a handleResponse function
+  return handleResponse(response);
 };
 
-export const verifyOtp = async (sessionId: string, otp: string, phoneNumber: string): Promise<{ isNewUser: boolean; user: Worker }> => {
-  const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp/`, {
+export const verifyOtp = async (otp: string, phoneNumber: string): Promise<{ is_new_user: boolean; user: Worker }> => {
+  console.log('Verifying OTP:', otp, 'for phone number:', phoneNumber);
+  const response = await fetch(`${API_BASE_URL}/api/auth/verify-otp/`, { // Ensure this URL matches your backend urls.py
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id: sessionId, otp, phoneNumber }),
+    body: JSON.stringify({ otp, phoneNumber }),
   });
-  return handleResponse(response);
+  const result = await handleResponse(response);
+  console.log('OTP verification result:', result);
+  return result;
 };

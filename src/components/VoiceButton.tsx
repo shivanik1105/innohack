@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mic, MicOff, Volume2 } from 'lucide-react';
 import { useLanguage } from '../hooks/useLanguage';
+import { useTranslation } from 'react-i18next';
 
 declare global {
   interface Window {
@@ -64,6 +65,7 @@ export default function VoiceButton({
   className = '',
 }: VoiceButtonProps) {
   const { language } = useLanguage();
+  const { i18n } = useTranslation();
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
@@ -81,7 +83,7 @@ export default function VoiceButton({
     }
 
     const recognition = new SpeechRecognitionAPI();
-    recognition.lang = langMap[language] || 'en-US';
+    recognition.lang = langMap[i18n.language] || langMap[language] || 'en-US';
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -94,7 +96,7 @@ export default function VoiceButton({
     recognition.onend = () => setIsListening(false);
 
     recognitionRef.current = recognition;
-  }, [language, onVoiceInput]);
+  }, [language, i18n.language, onVoiceInput]);
 
   const startListening = () => {
     if (recognitionRef.current && !isListening) {

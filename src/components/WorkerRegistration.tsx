@@ -4,10 +4,12 @@ import {
   User, MapPin, Briefcase, Camera,
   ChevronRight, Check, ArrowRight, CreditCard
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+
 import { Worker } from '../types/worker';
 import { useTranslation } from 'react-i18next';
 import i18n from "i18next";
+
+import { getLocalizedImage } from '../utils/languageImages';
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -20,6 +22,7 @@ function fileToBase64(file: File): Promise<string> {
 
 interface WorkerRegistrationProps {
   phoneNumber: string;
+  userId?: string;
   onComplete?: (workerData: Worker) => void;
   language?: 'en' | 'hi' | 'mr';
 }
@@ -28,13 +31,14 @@ interface FormData {
   name: string;
   age: string;
   pinCode: string;
-  aadhaarNumber: string;
   workerType: 'daily' | 'skilled' | '';
   gender: 'male' | 'female' | 'other' | '';
   jobTypes: string[];
   photo: File | null;
   aadhaar: File | null;
   isAvailableToday: boolean;
+  extractedAadhaarNumber?: string;
+  extractedName?: string;
 }
 
 const jobCategories = {
@@ -54,9 +58,8 @@ const jobCategories = {
   ]
 };
 
-export default function WorkerRegistration({ phoneNumber, onComplete, language: propLanguage }: WorkerRegistrationProps) {
+export default function WorkerRegistration({ phoneNumber, userId, onComplete, language: propLanguage }: WorkerRegistrationProps) {
   const { t, i18n } = useTranslation();
-  const navigate = useNavigate();
   const [language, setLanguage] = useState<'en' | 'hi' | 'mr'>('en');
 
   useEffect(() => {
@@ -75,20 +78,31 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
     age: '',
     gender: '',
     pinCode: '',
-    aadhaarNumber: '',
     workerType: '',
     jobTypes: [],
     photo: null,
     aadhaar: null,
     isAvailableToday: true,
+    extractedAadhaarNumber: '',
+    extractedName: '',
   });
+
+  // Debug: Monitor formData changes
+  useEffect(() => {
+    console.log('🔍 FormData updated:', {
+      hasAadhaar: !!formData.aadhaar,
+      aadhaarFileName: formData.aadhaar?.name,
+      hasPhoto: !!formData.photo,
+      name: formData.name
+    });
+  }, [formData]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [customJobType, setCustomJobType] = useState('');
+  const [showCustomJobInput, setShowCustomJobInput] = useState(false);
 
-  const handleInputChange = (field: keyof FormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }));
-  };
+
 
   const handleJobTypeToggle = (jobId: string) => {
     setFormData(prev => ({
@@ -96,6 +110,24 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
       jobTypes: prev.jobTypes.includes(jobId)
         ? prev.jobTypes.filter(id => id !== jobId)
         : [...prev.jobTypes, jobId]
+    }));
+  };
+
+  const handleAddCustomJobType = () => {
+    if (customJobType.trim() && !formData.jobTypes.includes(customJobType.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        jobTypes: [...prev.jobTypes, customJobType.trim()]
+      }));
+      setCustomJobType('');
+      setShowCustomJobInput(false);
+    }
+  };
+
+  const handleRemoveJobType = (jobId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      jobTypes: prev.jobTypes.filter(id => id !== jobId)
     }));
   };
 
@@ -114,7 +146,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
     }
   };
 
-  const handleAadhaarUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAadhaarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (!file.type.startsWith('image/') && !file.type.startsWith('application/pdf')) {
@@ -125,7 +157,69 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
         alert(t('workerRegistration.errors.aadhaarSizeExceeded'));
         return;
       }
-      setFormData(prev => ({ ...prev, aadhaar: file }));
+
+      // Verify name on Aadhaar matches entered name
+      if (formData.name.trim()) {
+        // Set the file immediately so user sees it's uploaded
+        console.log('📁 Setting Aadhaar file immediately...'); // Debug log
+        setFormData(prev => ({ ...prev, aadhaar: file }));
+
+        try {
+          console.log('🔄 Starting Aadhaar verification...'); // Debug log
+
+          const formDataForVerification = new FormData();
+          formDataForVerification.append('aadhaar_image', file);
+          formDataForVerification.append('name', formData.name);
+
+          const response = await fetch('http://127.0.0.1:8000/api/verify-aadhaar/', {
+            method: 'POST',
+            body: formDataForVerification
+          });
+
+          console.log('📡 Response status:', response.status); // Debug log
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log('📋 Aadhaar verification result:', result); // Debug log
+
+            if (result.success) {
+              if (result.verification_status === 'verified') {
+                // Extract Aadhaar number and name from OCR
+                const extractedData = result.extracted_data || {};
+                console.log('✅ Setting formData with Aadhaar file...'); // Debug log
+                setFormData(prev => ({
+                  ...prev,
+                  aadhaar: file,
+                  extractedAadhaarNumber: extractedData.aadhaar_number || '',
+                  extractedName: extractedData.name || ''
+                }));
+                alert('✅ Aadhaar verified successfully! Name matches.');
+              } else {
+                console.log('⚠️ Setting formData with Aadhaar file (verification pending)...'); // Debug log
+                alert('⚠️ Aadhaar uploaded but name verification failed. Please ensure the name matches your Aadhaar card.');
+                setFormData(prev => ({ ...prev, aadhaar: file }));
+              }
+            } else {
+              console.log('❌ Verification failed:', result.error); // Debug log
+              alert('❌ Aadhaar verification failed: ' + (result.error || 'Unknown error'));
+              // Still set the file so user can see it's uploaded
+              setFormData(prev => ({ ...prev, aadhaar: file }));
+            }
+          } else {
+            const errorResult = await response.json().catch(() => ({ error: 'Network error' }));
+            console.log('🌐 Network error:', errorResult); // Debug log
+            alert('❌ Aadhaar verification failed: ' + (errorResult.error || 'Server error'));
+            // Still set the file so user can see it's uploaded
+            setFormData(prev => ({ ...prev, aadhaar: file }));
+          }
+        } catch (error) {
+          console.error('🚨 Aadhaar verification error:', error);
+          alert('⚠️ Could not verify Aadhaar automatically. Please ensure the name matches your Aadhaar card.');
+          setFormData(prev => ({ ...prev, aadhaar: file }));
+        }
+      } else {
+        alert('Please enter your name first before uploading Aadhaar card.');
+      }
     }
   };
 
@@ -147,8 +241,8 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
       alert(t('workerRegistration.validation.pinInvalid'));
       return false;
     }
-    if (!/^\d{12}$/.test(formData.aadhaarNumber)) {
-      alert(t('workerRegistration.validation.aadhaarInvalid'));
+    if (!formData.extractedAadhaarNumber || !/^\d{12}$/.test(formData.extractedAadhaarNumber)) {
+      alert('Please upload a valid Aadhaar card first');
       return false;
     }
     if (!formData.workerType) {
@@ -179,15 +273,18 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
       ]);
 
       const workerData: Worker = {
-        id: crypto.randomUUID(),
+        id: userId || crypto.randomUUID(),
         phoneNumber: phoneNumber,
         name: formData.name,
         age: parseInt(formData.age),
         pinCode: formData.pinCode,
-        aadhaarNumber: formData.aadhaarNumber,
+        gender: formData.gender as 'male' | 'female' | 'other' | 'prefer-not-to-say',
+        email: '', // Will be filled later if needed
+        dateOfBirth: '', // Will be calculated from age or filled later
+        aadhaarNumber: formData.extractedAadhaarNumber || '',
         photo: base64Photo,
         aadhaarCardImage: base64Aadhaar,
-        workerType: formData.workerType,
+        workerType: formData.workerType as 'daily' | 'skilled' | 'semi-skilled',
         isAvailableToday: formData.isAvailableToday,
         jobTypes: formData.jobTypes,
         rating: 0,
@@ -197,18 +294,13 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
         language: language,
       };
 
-      if (onComplete) {
-        onComplete(workerData);
-      }
-
       setShowSuccess(true);
 
+      // Call onComplete callback after showing success
       setTimeout(() => {
-        navigate('/dashboard', { 
-          state: { 
-            worker: workerData 
-          } 
-        });
+        if (onComplete) {
+          onComplete(workerData);
+        }
       }, 2000);
     } catch (error) {
       console.error('Registration failed:', error);
@@ -232,18 +324,26 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
     scale: 0.98
   };
 
-  const isFormIncomplete = 
-    !formData.name || 
-    !formData.age || 
+  const isFormIncomplete =
+    !formData.name ||
+    !formData.age ||
     !formData.gender ||
     !formData.pinCode ||
-    !formData.aadhaarNumber ||
+    !formData.extractedAadhaarNumber ||
     !formData.workerType ||
     formData.jobTypes.length === 0 ||
     !formData.photo;
 
   return (
     <div className="bg-gradient-to-tr from-[#fdfbfb] to-[#ebedee] min-h-screen flex items-center justify-center p-4">
+      {/* Language-specific background pattern */}
+      <div
+        className="absolute inset-0 opacity-5 bg-repeat pointer-events-none"
+        style={{
+          backgroundImage: `url(${getLocalizedImage('registration', 'hero', i18n.language)})`,
+          backgroundSize: '200px 200px'
+        }}
+      />
       <AnimatePresence>
         {showSuccess && (
           <motion.div 
@@ -311,7 +411,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
           transition={{ delay: 0.1 }}
           className="w-full lg:w-[40%] bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-shadow"
         >
-          <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('workerRegistration.personalInfo.title')}</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">{t('Title')}</h2>
           
           <div className="space-y-6">
             <div>
@@ -322,37 +422,33 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('workerRegistration.personalInfo.name')}</label>
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={handleInputChange('name')}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      placeholder={t('workerRegistration.personalInfo.namePlaceholder')}
-                      required
-                    />
-                  </motion.div>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder={t('workerRegistration.personalInfo.namePlaceholder')}
+                    required
+                  />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('workerRegistration.personalInfo.age')}</label>
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <input
-                      type="number"
-                      value={formData.age}
-                      onChange={handleInputChange('age')}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      placeholder={t('workerRegistration.personalInfo.agePlaceholder')}
-                      min="18"
-                      max="75"
-                      required
-                    />
-                  </motion.div>
+                  <input
+                    type="number"
+                    value={formData.age}
+                    onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value }))}
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                    placeholder={t('workerRegistration.personalInfo.agePlaceholder')}
+                    min="18"
+                    max="75"
+                    required
+                  />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">{t('workerRegistration.personalInfo.pinCode')}</label>
-                  <motion.div whileHover={{ scale: 1.01 }}>
+                  <div>
                     <input
                       type="text"
                       value={formData.pinCode}
@@ -362,18 +458,18 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       maxLength={6}
                       required
                     />
-                  </motion.div>
+                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     {t('workerRegistration.personalInfo.gender')}
                   </label>
-                  <motion.div whileHover={{ scale: 1.01 }}>
+                  <div>
                     <select
                       value={formData.gender}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
+                      onChange={(e) => setFormData(prev => ({
+                        ...prev,
                         gender: e.target.value as 'male' | 'female' | 'other' | ''
                       }))}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
@@ -382,33 +478,12 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       <option value="">{t('workerRegistration.personalInfo.selectGender')}</option>
                       <option value="male">{t('workerRegistration.personalInfo.male')}</option>
                       <option value="female">{t('workerRegistration.personalInfo.female')}</option>
-                      <option value="other">{t('workerRegistration.personalInfo.other')}</option>
+                      <option value="other">{t('workerRegistration.personalInfo.preferNotToSay')}</option>
                     </select>
-                  </motion.div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {t('workerRegistration.personalInfo.aadhaarNumber')}
-                  </label>
-                  <motion.div whileHover={{ scale: 1.01 }}>
-                    <input
-                      type="text"
-                      value={formData.aadhaarNumber}
-                      onChange={(e) => setFormData(prev => ({ 
-                        ...prev, 
-                        aadhaarNumber: e.target.value.replace(/\D/g, '').slice(0, 12) 
-                      }))}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                      placeholder={t('workerRegistration.personalInfo.aadhaarPlaceholder')}
-                      maxLength={12}
-                      required
-                    />
-                  </motion.div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {t('workerRegistration.personalInfo.aadhaarDescription')}
-                  </p>
-                </div>
+
               </div>
             </div>
 
@@ -428,7 +503,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  {t('daily')}
+                  {t('Daily')}
                 </motion.button>
                 <motion.button
                   whileHover={buttonHover}
@@ -444,33 +519,107 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                       : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
                   }`}
                 >
-                  {t('skilled')}
+                  {t('Skilled')}
                 </motion.button>
               </div>
 
               {formData.workerType && (
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2">
-                    {formData.workerType === 'daily' 
-                      ? t('selectDaily') 
-                      : t('selectSkilled')}
+                    {formData.workerType === 'daily'
+                      ? t('selectDaily')
+                      : t('Select Skills')}
                   </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {(jobCategories[formData.workerType] || []).map((job) => (
+
+                  {/* Selected Job Types */}
+                  {formData.jobTypes.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600 mb-2">{t('selectedJobTypes')}:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.jobTypes.map((jobType) => (
+                          <motion.div
+                            key={jobType}
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                          >
+                            <span>{jobType}</span>
+                            <button
+                              onClick={() => handleRemoveJobType(jobType)}
+                              className="ml-2 text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Quick Select Options */}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-600 mb-2">{t('quickSelect')}:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {(jobCategories[formData.workerType] || []).slice(0, 4).map((job) => (
+                        <motion.button
+                          key={job.id}
+                          whileHover={buttonHover}
+                          whileTap={buttonTap}
+                          onClick={() => handleJobTypeToggle(job.id)}
+                          className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                            formData.jobTypes.includes(job.id)
+                              ? 'bg-blue-600 text-white hover:bg-blue-700'
+                              : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                          }`}
+                        >
+                          {t(`${job.id}`)}
+                        </motion.button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Custom Job Type Input */}
+                  <div>
+                    {!showCustomJobInput ? (
                       <motion.button
-                        key={job.id}
                         whileHover={buttonHover}
                         whileTap={buttonTap}
-                        onClick={() => handleJobTypeToggle(job.id)}
-                        className={`px-3 py-1 text-sm rounded-lg transition-colors ${
-                          formData.jobTypes.includes(job.id)
-                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                            : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
-                        }`}
+                        onClick={() => setShowCustomJobInput(true)}
+                        className="text-sm text-blue-600 hover:text-blue-800 underline"
                       >
-                        {t(`${job.id}`)}
+                        + {t('addCustomJobType')}
                       </motion.button>
-                    ))}
+                    ) : (
+                      <div className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          value={customJobType}
+                          onChange={(e) => setCustomJobType(e.target.value)}
+                          placeholder={t('enterJobType')}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                          onKeyDown={(e) => e.key === 'Enter' && handleAddCustomJobType()}
+                        />
+                        <motion.button
+                          whileHover={buttonHover}
+                          whileTap={buttonTap}
+                          onClick={handleAddCustomJobType}
+                          className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700"
+                        >
+                          {t('add')}
+                        </motion.button>
+                        <motion.button
+                          whileHover={buttonHover}
+                          whileTap={buttonTap}
+                          onClick={() => {
+                            setShowCustomJobInput(false);
+                            setCustomJobType('');
+                          }}
+                          className="px-3 py-2 bg-gray-300 text-gray-700 rounded-lg text-sm hover:bg-gray-400"
+                        >
+                          {t('cancel')}
+                        </motion.button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -527,13 +676,15 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                 {t('workerRegistration.aadhaar.upload')}
               </motion.label>
               {formData.aadhaar && (
-                <motion.span 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="ml-3 text-sm text-green-600 flex items-center"
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="ml-3 text-sm text-green-600 flex items-center bg-green-50 px-3 py-1 rounded-full border border-green-200"
                 >
-                  <Check className="w-4 h-4 mr-1" /> {t('workerRegistration.aadhaar.uploaded')}
-                </motion.span>
+                  <Check className="w-4 h-4 mr-1" />
+                  <span className="font-medium">{t('workerRegistration.aadhaar.uploaded')}</span>
+                  <span className="ml-2 text-xs text-green-500">({formData.aadhaar.name})</span>
+                </motion.div>
               )}
             </div>
           </div>
@@ -561,11 +712,11 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
               {formData.pinCode && (
                 <p className="text-gray-700">{t('PinCode')}: {formData.pinCode}</p>
               )}
-              {formData.aadhaarNumber && (
+              {formData.extractedAadhaarNumber && (
                 <p className="text-gray-700 flex items-center">
                   <CreditCard className="w-4 h-4 mr-1" />
-                  {t('AadhaarNumber')}: 
-                  {formData.aadhaarNumber.substring(0, 4)}-XXXX-XXXX-{formData.aadhaarNumber.substring(8)}
+                  {t('AadhaarNumber')}:
+                  {formData.extractedAadhaarNumber.substring(0, 4)}-XXXX-XXXX-{formData.extractedAadhaarNumber.substring(8)}
                 </p>
               )}
               {formData.gender && (
@@ -589,7 +740,7 @@ export default function WorkerRegistration({ phoneNumber, onComplete, language: 
                   <h4 className="text-sm font-medium text-gray-700 mb-1">
                     {formData.workerType === 'daily' 
                       ? t('selectedJobs') 
-                      : t('selectedSkills')}
+                      : t('Selected Skills')}
                   </h4>
                   <div className="flex flex-wrap gap-1">
                     {formData.jobTypes.map(jobId => {

@@ -14,12 +14,14 @@ from pathlib import Path
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env file from the project root (two levels up)
+load_dotenv(Path(__file__).resolve().parent.parent.parent / '.env')
 
 
 FAST2SMS_API_KEY = os.getenv('FAST2SMS_API_KEY')
 FAST2SMS_SENDER_ID = os.getenv('FAST2SMS_SENDER_ID')
-OTP_EXPIRY_SECONDS = os.getenv('OTP_EXPIRY_MINUTES')
+OTP_EXPIRY_MINUTES = os.getenv('OTP_EXPIRY_MINUTES', '5') # Default to '5' if not found
+OTP_EXPIRY_SECONDS = int(OTP_EXPIRY_MINUTES) * 60
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -33,7 +35,13 @@ SECRET_KEY = 'django-insecure-f6cnf^n@5w!q1%fea9*tu0akn6^874e03x5od61e=5*@-qr1rx
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+
+# IPFS Configuration
+USE_PINATA_IPFS = True  # Set to False to use local IPFS node
+PINATA_API_KEY = 'your_pinata_api_key_here'  # Get from https://pinata.cloud
+PINATA_SECRET_KEY = 'your_pinata_secret_key_here'
+IPFS_NODE_URL = 'http://localhost:5001'  # Local IPFS node URL
 
 
 # Application definition
@@ -51,6 +59,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Must be at the top
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -58,7 +67,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-     'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -87,16 +95,28 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
-        'NAME': os.environ.get('DB_NAME'),
-        'ENFORCE_SCHEMA': False,
-        'CLIENT': {
-            'host': 'mongodb+srv://shivanikinagi321:k8A0pkLVuy3IvpNT@cluster0.yfblacd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0',
-            'retryWrites': True
-        }
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# MongoDB Atlas configuration (for future use)
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'djongo',
+#         'NAME': 'workerconnect',
+#         'CLIENT': {
+#             'host': 'mongodb+srv://your-username:your-password@cluster0.mongodb.net/workerconnect?retryWrites=true&w=majority',
+#             'username': 'your-username',
+#             'password': 'your-password',
+#             'authSource': 'admin',
+#             'authMechanism': 'SCRAM-SHA-1',
+#         }
+#     }
+# }
+# CORS settings for development
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators

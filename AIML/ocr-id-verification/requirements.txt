@@ -4,3 +4,5 @@ Pillow
 numpy
 pytest
 streamlit
+fuzzywuzzy
+python-Levenshtein
