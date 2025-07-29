@@ -22,7 +22,76 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.env
 
+# Environment variables and secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase and Google Cloud credentials
+firebase_key.json
+*firebase-adminsdk*.json
+service-account-key.json
+google-credentials.json
+gcp-key.json
+
+# Backend specific
+backend/firebase_key.json
+backend/*firebase-adminsdk*.json
+backend/service-account-key.json
+backend/google-credentials.json
+backend/gcp-key.json
+
+# Database
+*.db
+*.sqlite3
+db.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
 innohack/
-# worker-2261e-firebase-adminsdk-fbsvc-868ba499bf.json
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# API Keys and Secrets
+api_keys.json
+secrets.json
+credentials.json
+config/secrets.py
+config/credentials.py
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
